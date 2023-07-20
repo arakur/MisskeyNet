@@ -2,3 +2,5 @@ obj
 bin
 
 .fake
+.vscode/settings.json
+*/.vscode/settings.json
