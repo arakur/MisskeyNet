@@ -4,3 +4,4 @@ bin
 .fake
 .vscode/settings.json
 */.vscode/settings.json
+Uri.Tests/TestResults/Ionide.trx
