@@ -90,7 +90,9 @@ type HttpApi(scheme: Scheme, host: string) =
     /// 認証ページの URI． \
     /// `https://host.name/miauth/sessionID`
     /// </summary>
-    member this.MiauthUri = this.Uri |> Uri.With "miauth" |> Uri.With this.Session.Uuid
+    member this.MiAuthUri = this.Uri |> Uri.With "miauth" |> Uri.With this.Session.Uuid
+
+    // TODO: Add an option to specify permissions.
 
     /// <summary>
     /// Open the authorization page in the default browser. \
@@ -107,9 +109,9 @@ type HttpApi(scheme: Scheme, host: string) =
             | PlatformID.Win32NT
             | PlatformID.Win32S
             | PlatformID.Win32Windows
-            | PlatformID.WinCE -> "powershell.exe", $"-Command Start-Process '{this.MiauthUri.ToString()}'"
+            | PlatformID.WinCE -> "powershell.exe", $"-Command Start-Process '{this.MiAuthUri.ToString()}'"
             | PlatformID.Unix
-            | PlatformID.MacOSX -> "sh", $"-c 'open {this.MiauthUri.ToString()}'"
+            | PlatformID.MacOSX -> "sh", $"-c 'open {this.MiAuthUri.ToString()}'"
             | _ -> failwith "unsupported platform"
 
         async {
