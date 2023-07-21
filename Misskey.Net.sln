@@ -11,6 +11,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Utils", "Utils\Utils.fsproj
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Uri", "Uri\Uri.fsproj", "{B14A64AD-3E3D-4CA5-9BC9-9FC2CAD979F7}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Uri.Tests", "Uri.Tests\Uri.Tests.fsproj", "{75023E52-84F9-4F9B-9208-9FD18D72F2F4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,5 +42,9 @@ Global
 		{B14A64AD-3E3D-4CA5-9BC9-9FC2CAD979F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B14A64AD-3E3D-4CA5-9BC9-9FC2CAD979F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B14A64AD-3E3D-4CA5-9BC9-9FC2CAD979F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75023E52-84F9-4F9B-9208-9FD18D72F2F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75023E52-84F9-4F9B-9208-9FD18D72F2F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75023E52-84F9-4F9B-9208-9FD18D72F2F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75023E52-84F9-4F9B-9208-9FD18D72F2F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

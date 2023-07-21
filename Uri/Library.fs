@@ -1,6 +1,7 @@
 ﻿namespace Uri
 
 open System.Net.Http
+open System.Web
 
 /// <summary>
 /// A type of a scheme of a URI.
@@ -20,11 +21,24 @@ type Scheme =
     /// HTTPS スキーム．
     /// </summary>
     | Https
+    /// <summary>
+    /// The WS scheme. \
+    /// WS スキーム．
+    /// </summary>
+    | Ws
+    /// <summary>
+    /// The WSS scheme. \
+    /// WSS スキーム．
+    /// </summary>
+    | Wss
+
 
     override this.ToString() =
         match this with
         | Http -> "http"
         | Https -> "https"
+        | Ws -> "ws"
+        | Wss -> "wss"
 
     /// <summary>
     /// Parses a string to a URI scheme. \
@@ -36,6 +50,8 @@ type Scheme =
         match str with
         | "http" -> Some Http
         | "https" -> Some Https
+        | "ws" -> Some Ws
+        | "wss" -> Some Wss
         | _ -> None
 
 /// <summary>
@@ -49,7 +65,8 @@ type Scheme =
 type Uri =
     { Scheme: Scheme
       Host: string
-      Directories: string list }
+      Directories: string list
+      Parameters: Map<string, string> }
 
     /// <summary>
     /// Creates a new URI without directories. \
@@ -61,7 +78,8 @@ type Uri =
     static member Mk(scheme: Scheme, host: string) =
         { Scheme = scheme
           Host = host
-          Directories = [] }
+          Directories = []
+          Parameters = Map.empty }
 
     /// <summary>
     /// Returns a new URI added a directory. \
@@ -74,9 +92,58 @@ type Uri =
         { this with
             Directories = dir :: this.Directories }
 
+    /// <summary>
+    /// Returns a new URI added directories. \
+    /// ディレクトリを追加した新しい URI を返します．
+    /// </summary>
+    /// <param name="directories">Directories to add. 追加するディレクトリ．</param>
+    /// <param name="this">A URI to add the directories. ディレクトリを追加する URI．</param>
+    /// <returns>A new URI added directories. ディレクトリを追加した新しい URI．</returns>
+    static member WithDirectories (directories: string seq) (this: Uri) =
+        directories |> Seq.fold (fun acc x -> Uri.With x acc) this
+
+    /// <summary>
+    /// Returns a new URI added a parameter. \
+    /// パラメータを追加した新しい URI を返します．
+    /// </summary>
+    /// <param name="key">A key of the parameter. パラメータのキー．</param>
+    /// <param name="value">A value of the parameter. パラメータの値．</param>
+    /// <param name="this">A URI to add the parameter. パラメータを追加する URI．</param>
+    /// <returns>A new URI added a parameter. パラメータを追加した新しい URI．</returns>
+    static member WithParameter (key: string) (value: string) (this: Uri) =
+        { this with
+            Parameters = this.Parameters.Add(key, value) }
+
+    /// <summary>
+    /// Returns a new URI added parameters. \
+    /// パラメータを追加した新しい URI を返します．
+    /// </summary>
+    /// <param name="parameters">Parameters to add. 追加するパラメータ．</param>
+    /// <param name="this">A URI to add the parameters. パラメータを追加する URI．</param>
+    /// <returns>A new URI added parameters. パラメータを追加した新しい URI．</returns>
+    static member WithParameters (parameters: Map<string, string>) (this: Uri) =
+        let newParameters =
+            parameters
+            |> Map.toSeq
+            |> Seq.fold (fun (acc: Map<_, _>) kv -> acc.Add kv) this.Parameters
+
+        { this with Parameters = newParameters }
+
     override this.ToString() =
-        let path = this.Directories |> List.fold (fun acc x -> $"/{x}{acc}") ""
-        $"{this.Scheme.ToString()}://{this.Host}{path}"
+        let host = this.Host |> HttpUtility.UrlEncode
+
+        let path =
+            this.Directories
+            |> List.map HttpUtility.UrlEncode
+            |> List.fold (fun acc x -> $"/{x}{acc}") ""
+
+        let query =
+            this.Parameters
+            |> Seq.map (fun kv -> kv.Key, HttpUtility.UrlEncode kv.Value)
+            |> Seq.map (fun (k, v) -> $"{k}={v}")
+            |> String.concat "&"
+
+        $"{this.Scheme}://{host}{path}?{query}"
 
     /// <summary>
     /// Create a post request to the URI. \
