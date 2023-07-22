@@ -4,7 +4,6 @@ open FSharpPlus
 open System
 open System.Net.Http
 open System.Text
-open System.Text.Json.Nodes
 
 open Utils.Measure
 open Uri
@@ -36,7 +35,7 @@ type Session() =
 /// </summary>
 /// <param name="scheme">The scheme of the API. API のスキーム．</param>
 /// <param name="host">The host of the API. API のホスト．</param>
-type HttpApi(scheme: Scheme, host: string) =
+type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
     let mutable token = None
     let mutable authorizedUserId = None
 
@@ -71,10 +70,7 @@ type HttpApi(scheme: Scheme, host: string) =
     /// The HTTP client. \
     /// HTTP クライアント．
     /// </summary>
-    member val Client = new HttpClient() with get
-
-    interface System.IDisposable with
-        member this.Dispose() = this.Client.Dispose()
+    member val Client = client with get
 
     //
 
@@ -149,11 +145,7 @@ type HttpApi(scheme: Scheme, host: string) =
             // post request
             use request = new HttpRequestMessage(HttpMethod.Post, uri.ToString())
 
-            let! response = this.Client.SendAsync request |> Async.AwaitTask
-
-            let! content = response.Content.ReadAsStringAsync() |> Async.AwaitTask
-
-            let json = JsonValue.Parse content
+            let! json = HttpRequest.Post().Request(this.Client, uri)
 
             let ok = json.["ok"].ToString()
 
@@ -221,7 +213,7 @@ type HttpApi(scheme: Scheme, host: string) =
     /// The response. \
     /// レスポンス．
     /// </returns>
-    member this.RequestApi(endPointName: string, ?payload: Map<string, string>) =
+    member this.RequestApi(endPointNameSeq: string seq, ?payload: Map<string, string>) =
         // The default payload is an empty map.
         let payload = defaultArg payload Map.empty
 
@@ -239,22 +231,12 @@ type HttpApi(scheme: Scheme, host: string) =
             |> String.concat ","
             |> fun x -> $"{{{x}}}"
 
-        let uri = this.ApiUri |> Uri.With endPointName
+        let uri = this.ApiUri |> Uri.WithDirectories endPointNameSeq
 
         async {
             use stringContent = new StringContent(json, Encoding.UTF8, "application/json")
 
-            use request = uri |> Uri.Post
-
-            request.Content <- stringContent
-
-            let! message = this.Client.SendAsync request |> Async.AwaitTask
-
-            let! content = message.Content.ReadAsStringAsync() |> Async.AwaitTask
-
-            let json = JsonValue.Parse content
-
-            return json
+            return! HttpRequest.Post().Request(this.Client, uri, stringContent)
         }
 
 // TODO: Generate functions for each endpoint.

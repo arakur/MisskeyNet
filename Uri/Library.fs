@@ -129,13 +129,19 @@ type Uri =
 
         { this with Parameters = newParameters }
 
-    override this.ToString() =
-        let host = this.Host |> HttpUtility.UrlEncode
 
-        let path =
-            this.Directories
-            |> List.map HttpUtility.UrlEncode
-            |> List.fold (fun acc x -> $"/{x}{acc}") ""
+    /// <summary>
+    /// Composes a URI to a string. \
+    /// URI を文字列に合成します．
+    /// </summary>
+    ///  <remarks>
+    /// Query parameters are encoded by <see cref="System.Web.HttpUtility.UrlEncode"/>. \
+    /// クエリパラメータは <see cref="System.Web.HttpUtility.UrlEncode"/> によってエンコードされます．
+    /// </remarks>
+    /// <returns>A string composed from the URI. URI から合成された文字列．</returns>
+    member this.Compose() =
+        let host = this.Host |> HttpUtility.UrlEncode
+        let directories = this.Directories |> List.fold (fun acc x -> $"/{x}{acc}") ""
 
         let query =
             this.Parameters
@@ -143,17 +149,21 @@ type Uri =
             |> Seq.map (fun (k, v) -> $"{k}={v}")
             |> String.concat "&"
 
-        $"{this.Scheme}://{host}{path}?{query}"
+        $"{this.Scheme}://{host}{directories}?{query}"
 
-    /// <summary>
-    /// Create a post request to the URI. \
-    /// URI に対する POST リクエストを作成します．
-    /// </summary>
-    /// <remarks>
-    /// The return value must be bound by a `use` statement as the return is disposable. \
-    /// 返り値は破棄可能なので，`use` 文で束縛する必要があります．
-    ///　</remarks>
-    /// <param name="this">A URI to create a request. リクエストを作成する URI．</param>
-    /// <returns>A post request to the URI. URI に対する POST リクエスト．</returns>
-    static member Post(this: Uri) =
-        new HttpRequestMessage(HttpMethod.Post, this.ToString())
+
+    override this.ToString() = this.Compose()
+
+// TODO: remove this
+// /// <summary>
+// /// Create a post request to the URI. \
+// /// URI に対する POST リクエストを作成します．
+// /// </summary>
+// /// <remarks>
+// /// The return value must be bound by a `use` statement as the return is disposable. \
+// /// 返り値は破棄可能なので，`use` 文で束縛する必要があります．
+// ///　</remarks>
+// /// <param name="this">A URI to create a request. リクエストを作成する URI．</param>
+// /// <returns>A post request to the URI. URI に対する POST リクエスト．</returns>
+// static member Post(this: Uri) =
+//     new HttpRequestMessage(HttpMethod.Post, this.ToString())

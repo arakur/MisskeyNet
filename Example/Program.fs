@@ -2,6 +2,8 @@
 
 open Uri
 open HttpApi
+open System.Net.Http
+open Microsoft.Extensions.DependencyInjection
 
 //
 
@@ -10,11 +12,17 @@ let scheme = Https
 let host = "misskey.systems"
 
 async {
-    use httpApi = new HttpApi(scheme, host)
+    let service = ServiceCollection().AddHttpClient()
+
+    let provider = service.BuildServiceProvider()
+
+    let client = provider.GetService<IHttpClientFactory>()
+
+    let httpApi = HttpApi(scheme, host, client)
 
     //
 
-    let! stats = httpApi.RequestApi "stats"
+    let! stats = httpApi.RequestApi [ "stats" ]
 
     printfn "stats: %s" <| stats.ToString()
 
@@ -34,7 +42,7 @@ async {
 
     let id = httpApi.AuthorizedUserId.Value
 
-    let! userInfo = httpApi.RequestApi("users/show", Map.ofList [ "userId", id ])
+    let! userInfo = httpApi.RequestApi([ "users"; "show" ], Map.ofList [ "userId", id ])
 
     printfn "user: %s" <| userInfo.ToString()
 
