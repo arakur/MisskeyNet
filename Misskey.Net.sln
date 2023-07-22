@@ -15,6 +15,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Uri.Tests", "Uri.Tests\Uri.
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "HttpRequest", "HttpRequest\HttpRequest.fsproj", "{5A1CE72F-B783-4DD3-9F8D-355077F43522}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "StreamingApi", "StreamingApi\StreamingApi.fsproj", "{1B044E11-5636-4447-A2A9-A9AD0C94E15A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,5 +54,9 @@ Global
 		{5A1CE72F-B783-4DD3-9F8D-355077F43522}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A1CE72F-B783-4DD3-9F8D-355077F43522}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A1CE72F-B783-4DD3-9F8D-355077F43522}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B044E11-5636-4447-A2A9-A9AD0C94E15A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B044E11-5636-4447-A2A9-A9AD0C94E15A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B044E11-5636-4447-A2A9-A9AD0C94E15A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B044E11-5636-4447-A2A9-A9AD0C94E15A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -144,12 +144,16 @@ type Uri =
         let directories = this.Directories |> List.fold (fun acc x -> $"/{x}{acc}") ""
 
         let query =
-            this.Parameters
-            |> Seq.map (fun kv -> kv.Key, HttpUtility.UrlEncode kv.Value)
-            |> Seq.map (fun (k, v) -> $"{k}={v}")
-            |> String.concat "&"
+            if this.Parameters.IsEmpty then
+                ""
+            else
+                this.Parameters
+                |> Seq.map (fun kv -> kv.Key, HttpUtility.UrlEncode kv.Value)
+                |> Seq.map (fun (k, v) -> $"{k}={v}")
+                |> String.concat "&"
+                |> fun x -> $"?{x}"
 
-        $"{this.Scheme}://{host}{directories}?{query}"
+        $"{this.Scheme}://{host}{directories}{query}"
 
 
     override this.ToString() = this.Compose()
