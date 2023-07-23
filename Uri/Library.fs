@@ -121,11 +121,9 @@ type Uri =
     /// <param name="parameters">Parameters to add. 追加するパラメータ．</param>
     /// <param name="this">A URI to add the parameters. パラメータを追加する URI．</param>
     /// <returns>A new URI added parameters. パラメータを追加した新しい URI．</returns>
-    static member WithParameters (parameters: Map<string, string>) (this: Uri) =
+    static member WithParameters (parameters: (string * string) seq) (this: Uri) =
         let newParameters =
-            parameters
-            |> Map.toSeq
-            |> Seq.fold (fun (acc: Map<_, _>) kv -> acc.Add kv) this.Parameters
+            parameters |> Seq.fold (fun (acc: Map<_, _>) kv -> acc.Add kv) this.Parameters
 
         { this with Parameters = newParameters }
 

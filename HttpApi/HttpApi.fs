@@ -26,7 +26,7 @@ type Token = string
 /// セッションIDは <see cref="System.Guid.NewGuid"/> によって生成された UUID です．
 /// </remarks>
 type Session() =
-    member val Uuid = Guid.NewGuid().ToString() with get
+    member val internal Uuid = Guid.NewGuid().ToString() with get
 
 
 /// <summary>
@@ -94,20 +94,40 @@ type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
     /// Open the authorization page in the default browser. \
     /// デフォルトブラウザで認証ページを開きます．
     /// </summary>
-    member this.Authorize() =
+    member this.Authorize(?name: string, ?icon: string, ?callback: string, ?permissions: Permission seq) =
         // Combine a command and arguments depending on the platform.
         // TODO: Check if the command works on platforms other than Windows.
 
         let os = Environment.OSVersion.Platform
+
+        let nameQuery = name |> Option.map (fun x -> "name", x)
+
+        let iconQuery = icon |> Option.map (fun x -> "icon", x)
+
+        let callbackQuery = callback |> Option.map (fun x -> "callback", x)
+
+        let permissionsQuery =
+            permissions
+            |> map (
+                map (fun (permission: Permission) -> permission.Name)
+                >> String.concat ","
+                >> fun x -> "permission", x
+            )
+
+        let queries =
+            [| nameQuery; iconQuery; callbackQuery; permissionsQuery |] |> Seq.choose id
+
+        let miAuthUri =
+            this.MiAuthUri |> Uri.WithParameters queries |> (fun uri -> uri.ToString())
 
         let fileName, arguments =
             match os with
             | PlatformID.Win32NT
             | PlatformID.Win32S
             | PlatformID.Win32Windows
-            | PlatformID.WinCE -> "powershell.exe", $"-Command Start-Process '{this.MiAuthUri.ToString()}'"
+            | PlatformID.WinCE -> "powershell.exe", $"-Command Start-Process '{miAuthUri}'"
             | PlatformID.Unix
-            | PlatformID.MacOSX -> "sh", $"-c 'open {this.MiAuthUri.ToString()}'"
+            | PlatformID.MacOSX -> "sh", $"-c 'open {miAuthUri}'"
             | _ -> failwith "unsupported platform"
 
         async {
@@ -151,6 +171,7 @@ type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
 
             if ok = "true" then
                 token <- Some(json.["token"].ToString())
+                printfn "%s" this.Token.Value // DEBUG
                 let user = json.["user"]
                 let id = user.["id"].ToString()
                 authorizedUserId <- Some(id)

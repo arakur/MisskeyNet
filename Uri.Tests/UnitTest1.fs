@@ -26,7 +26,7 @@ type TestClass() =
         let scheme = Https
         let host = "misskey.ふーばー"
         let directories = [ "foo"; "bar" ]
-        let parameters = Map.ofList [ "foo", "ばー"; "url", "https://misskey.ふーばー/callback" ]
+        let parameters = [| "foo", "ばー"; "url", "https://misskey.ふーばー/callback" |]
 
         let uri =
             Uri.Mk(scheme, host)
