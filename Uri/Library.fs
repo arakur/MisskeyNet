@@ -88,7 +88,7 @@ type Uri =
     /// <param name="dir">A directory to add. 追加するディレクトリ．</param>
     /// <param name="this">A URI to add the segment. セグメントを追加する URI．</param>
     /// <returns>A new URI added a directory. ディレクトリを追加した新しい URI．</returns>
-    static member With (dir: string) (this: Uri) =
+    static member withDirectory (dir: string) (this: Uri) =
         { this with
             Directories = dir :: this.Directories }
 
@@ -99,8 +99,8 @@ type Uri =
     /// <param name="directories">Directories to add. 追加するディレクトリ．</param>
     /// <param name="this">A URI to add the directories. ディレクトリを追加する URI．</param>
     /// <returns>A new URI added directories. ディレクトリを追加した新しい URI．</returns>
-    static member WithDirectories (directories: string seq) (this: Uri) =
-        directories |> Seq.fold (fun acc x -> Uri.With x acc) this
+    static member withDirectories (directories: string seq) (this: Uri) =
+        directories |> Seq.fold (fun acc x -> Uri.withDirectory x acc) this
 
     /// <summary>
     /// Returns a new URI added a parameter. \
@@ -110,7 +110,7 @@ type Uri =
     /// <param name="value">A value of the parameter. パラメータの値．</param>
     /// <param name="this">A URI to add the parameter. パラメータを追加する URI．</param>
     /// <returns>A new URI added a parameter. パラメータを追加した新しい URI．</returns>
-    static member WithParameter (key: string) (value: string) (this: Uri) =
+    static member withParameter (key: string) (value: string) (this: Uri) =
         { this with
             Parameters = this.Parameters.Add(key, value) }
 
@@ -121,7 +121,7 @@ type Uri =
     /// <param name="parameters">Parameters to add. 追加するパラメータ．</param>
     /// <param name="this">A URI to add the parameters. パラメータを追加する URI．</param>
     /// <returns>A new URI added parameters. パラメータを追加した新しい URI．</returns>
-    static member WithParameters (parameters: (string * string) seq) (this: Uri) =
+    static member withParameters (parameters: (string * string) seq) (this: Uri) =
         let newParameters =
             parameters |> Seq.fold (fun (acc: Map<_, _>) kv -> acc.Add kv) this.Parameters
 

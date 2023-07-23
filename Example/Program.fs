@@ -2,6 +2,7 @@
 
 open Uri
 open HttpApi
+open StreamingApi
 open System.Net.Http
 open Microsoft.Extensions.DependencyInjection
 open System.Net.WebSockets
@@ -21,19 +22,19 @@ async {
 
     let client = provider.GetService<IHttpClientFactory>()
 
-    let httpApi = HttpApi(Https, host, client)
+    let httpApi = HttpApi(scheme = Https, host = host, client = client)
 
     //
 
-    let! stats = httpApi.RequestApi [ "stats" ]
+    let! stats = httpApi.RequestApiAsync [ "stats" ]
 
     printfn "stats: %s" <| stats.ToString()
 
     //
 
-    do! httpApi.Authorize(name = "Example App", permissions = [| Permission.Write <| PermissionKind.Account() |])
+    do! httpApi.AuthorizeAsync(name = "Example App", permissions = [| Permission.Write <| PermissionKind.Account() |])
 
-    let! check = httpApi.WaitCheck()
+    let! check = httpApi.WaitCheckAsync()
 
     if not check then
         printfn "authorization failed"
@@ -42,58 +43,24 @@ async {
 
         //
 
-        use websocket = new ClientWebSocket()
+        use streamingApi =
+            new StreamingApi(httpApi = httpApi, webSocket = new ClientWebSocket())
 
-        let cancellationToken = CancellationToken.None
-
-        let uri =
-            Uri.Mk(Wss, host)
-            |> Uri.With "streaming"
-            |> Uri.WithParameter "i" httpApi.Token.Value
-
-        printfn "connecting to %s" <| uri.ToString()
-
-        do!
-            websocket.ConnectAsync(System.Uri(uri.ToString()), cancellationToken)
-            |> Async.AwaitTask
+        do! streamingApi.ConnectStreamingAsync()
 
         printfn "connected"
 
-        let buffer = Array.zeroCreate<byte> 1024
-
-        let bufferSegment = ArraySegment(buffer)
-
-        let connectId = Guid.NewGuid().ToString()
-
-        // {
-        //     "type": "connect",
-        //     "body": {
-        //         "channel": "localTimeline",
-        //         "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-        //     }
-
-        let mutable connect = JsonObject()
-        connect.Add("type", "connect")
-
-        let mutable body = JsonObject()
-        body.Add("channel", "homeTimeline")
-        body.Add("id", connectId)
-        connect.Add("body", body)
-
-        //
-
-        let bytes = connect.ToString() |> Encoding.UTF8.GetBytes |> ArraySegment
-
-        do!
-            websocket.SendAsync(bytes, WebSocketMessageType.Text, true, cancellationToken)
-            |> Async.AwaitTask
+        let! _channelConnection = streamingApi.ConnectChannelAsync("globalTimeline")
 
         while true do
-            let! result = websocket.ReceiveAsync(bufferSegment, cancellationToken) |> Async.AwaitTask
+            let! result = streamingApi.ReceiveAsync()
 
-            let str = Encoding.UTF8.GetString(buffer, 0, result.Count)
+            let text = result.["body"].["body"].["text"].ToString()
+
+            let str = result.ToString()
 
             printfn "received: %s" str
+            printfn "text: %s" text
 
         return ()
 }

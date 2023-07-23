@@ -30,8 +30,8 @@ type TestClass() =
 
         let uri =
             Uri.Mk(scheme, host)
-            |> Uri.WithDirectories directories
-            |> Uri.WithParameters parameters
+            |> Uri.withDirectories directories
+            |> Uri.withParameters parameters
 
         let str = uri.ToString()
 

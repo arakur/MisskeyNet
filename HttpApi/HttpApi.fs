@@ -35,11 +35,19 @@ type Session() =
 /// </summary>
 /// <param name="scheme">The scheme of the API. API のスキーム．</param>
 /// <param name="host">The host of the API. API のホスト．</param>
-type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
+/// <param name="client">The HTTP client. HTTP クライアント．</param>
+type HttpApi(host: string, client: IHttpClientFactory, ?scheme: Scheme) =
+    let scheme = defaultArg scheme Https
     let mutable token = None
     let mutable authorizedUserId = None
 
     //
+
+    /// <summary>
+    /// The host of the API. \
+    /// API のホスト．
+    /// </summary>
+    member val Host = host with get
 
     /// <summary>
     /// The URI of the API. \
@@ -79,14 +87,22 @@ type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
     /// API の URI． \
     /// `https://host.name/api`
     /// </summary>
-    member this.ApiUri = this.Uri |> Uri.With "api"
+    member this.ApiUri = this.Uri |> Uri.withDirectory "api"
+
+    /// <summary>
+    /// The URI of the API. \
+    /// API の URI． \
+    /// `https://host.name/api`
+    /// </summary>
+    member this.StreamingUri = this.Uri |> Uri.withDirectory "api"
 
     /// <summary>
     /// The URI of the authorization page. \
     /// 認証ページの URI． \
     /// `https://host.name/miauth/sessionID`
     /// </summary>
-    member this.MiAuthUri = this.Uri |> Uri.With "miauth" |> Uri.With this.Session.Uuid
+    member this.MiAuthUri =
+        this.Uri |> Uri.withDirectory "miauth" |> Uri.withDirectory this.Session.Uuid
 
     // TODO: Add an option to specify permissions.
 
@@ -94,7 +110,7 @@ type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
     /// Open the authorization page in the default browser. \
     /// デフォルトブラウザで認証ページを開きます．
     /// </summary>
-    member this.Authorize(?name: string, ?icon: string, ?callback: string, ?permissions: Permission seq) =
+    member this.AuthorizeAsync(?name: string, ?icon: string, ?callback: string, ?permissions: Permission seq) =
         // Combine a command and arguments depending on the platform.
         // TODO: Check if the command works on platforms other than Windows.
 
@@ -118,7 +134,7 @@ type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
             [| nameQuery; iconQuery; callbackQuery; permissionsQuery |] |> Seq.choose id
 
         let miAuthUri =
-            this.MiAuthUri |> Uri.WithParameters queries |> (fun uri -> uri.ToString())
+            this.MiAuthUri |> Uri.withParameters queries |> (fun uri -> uri.ToString())
 
         let fileName, arguments =
             match os with
@@ -154,12 +170,12 @@ type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
     /// </summary>
     /// <returns>
     /// </returns>
-    member this.Check() =
+    member this.CheckAsync() =
         let uri =
             this.ApiUri
-            |> Uri.With "miauth"
-            |> Uri.With this.Session.Uuid
-            |> Uri.With "check"
+            |> Uri.withDirectory "miauth"
+            |> Uri.withDirectory this.Session.Uuid
+            |> Uri.withDirectory "check"
 
         async {
             // post request
@@ -171,7 +187,6 @@ type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
 
             if ok = "true" then
                 token <- Some(json.["token"].ToString())
-                printfn "%s" this.Token.Value // DEBUG
                 let user = json.["user"]
                 let id = user.["id"].ToString()
                 authorizedUserId <- Some(id)
@@ -192,7 +207,7 @@ type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
     /// `true` if the authorization is completed. \
     /// 認証が完了している場合 `true` を返します．
     /// </returns>
-    member this.WaitCheck(?span: float<millisecond>, ?timeout: float<millisecond>, ?silent: bool) =
+    member this.WaitCheckAsync(?span: float<millisecond>, ?timeout: float<millisecond>, ?silent: bool) =
         // Set default values.
         let span = defaultArg span 1000.<millisecond>
         let timeout = defaultArg timeout 10000.<millisecond>
@@ -213,7 +228,7 @@ type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
             printUnlessSilent "checking..."
 
             async {
-                let! check = this.Check()
+                let! check = this.CheckAsync()
 
                 if check then
                     printUnlessSilent "authorized"
@@ -221,7 +236,7 @@ type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
                 else
                     printUnlessSilent "not yet authorized"
                     do! Async.Sleep(int span)
-                    return! this.WaitCheck(span, timeout - span, silent)
+                    return! this.WaitCheckAsync(span, timeout - span, silent)
             }
 
     /// <summary>
@@ -234,7 +249,7 @@ type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
     /// The response. \
     /// レスポンス．
     /// </returns>
-    member this.RequestApi(endPointNameSeq: string seq, ?payload: Map<string, string>) =
+    member this.RequestApiAsync(endPointNameSeq: string seq, ?payload: Map<string, string>) =
         // The default payload is an empty map.
         let payload = defaultArg payload Map.empty
 
@@ -252,7 +267,7 @@ type HttpApi(scheme: Scheme, host: string, client: IHttpClientFactory) =
             |> String.concat ","
             |> fun x -> $"{{{x}}}"
 
-        let uri = this.ApiUri |> Uri.WithDirectories endPointNameSeq
+        let uri = this.ApiUri |> Uri.withDirectories endPointNameSeq
 
         async {
             use stringContent = new StringContent(json, Encoding.UTF8, "application/json")
