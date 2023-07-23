@@ -9,7 +9,33 @@ open System.Threading
 open System
 open System.Text
 open System.Text.Json.Nodes
-open System.Net.WebSockets
+
+// TODO: 別ファイルに分ける．
+
+type IChannel =
+    abstract member Name: string
+
+type GlobalTimelineChannel() =
+    interface IChannel with
+        member __.Name = "globalTimeline"
+
+type HomeTimelineChannel() =
+    interface IChannel with
+        member __.Name = "homeTimeline"
+
+type HybridTimelineChannel() =
+    interface IChannel with
+        member __.Name = "hybridTimeline"
+
+type LocalTimelineChannel() =
+    interface IChannel with
+        member __.Name = "localTimeline"
+
+type MainChannel() =
+    interface IChannel with
+        member __.Name = "main"
+
+//
 
 type ChannelConnection() =
     member val internal Uuid = Guid.NewGuid().ToString() with get
@@ -96,9 +122,15 @@ type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int
         this.WebSocket.SendAsync(bytes, messageType, endOfMessage, cancellationToken)
         |> Async.AwaitTask
 
-    // TODO: Make a type for a channel.
 
-    member this.ConnectChannelAsync(channel: string, ?cancellationToken: CancellationToken) =
+    /// <summary>
+    /// Connect to a channel. \
+    /// チャンネルに接続します．
+    /// </summary>
+    /// <param name="channel">A channel to connect. 接続するチャンネル．</param>
+    /// <param name="cancellationToken">The cancellation token. キャンセルトークン．default: `CancellationToken.None`</param>
+    /// <returns>A channel connection. チャンネル接続．</returns>
+    member this.ConnectChannelAsync(channel: IChannel, ?cancellationToken: CancellationToken) =
         let channelConnection = ChannelConnection()
 
         // {
@@ -112,7 +144,7 @@ type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int
         let mutable message = JsonObject()
         message.Add("type", "connect")
         let mutable body = JsonObject()
-        body.Add("channel", channel)
+        body.Add("channel", channel.Name)
         body.Add("id", channelConnection.Uuid)
         message.Add("body", body)
 

@@ -50,7 +50,7 @@ async {
 
         printfn "connected"
 
-        let! _channelConnection = streamingApi.ConnectChannelAsync("globalTimeline")
+        let! _channelConnection = streamingApi.ConnectChannelAsync(GlobalTimelineChannel())
 
         while true do
             let! result = streamingApi.ReceiveAsync()
