@@ -31,72 +31,70 @@ async {
 
     //
 
-    do! httpApi.Authorize()
+    do! httpApi.Authorize(name = "Example App", permissions = [| Permission.Write <| PermissionKind.Account() |])
 
     let! check = httpApi.WaitCheck()
 
-    if check then
-        printfn "authorization completed"
-    else
+    if not check then
         printfn "authorization failed"
+    else
+        printfn "authorization completed"
+
+        //
+
+        use websocket = new ClientWebSocket()
+
+        let cancellationToken = CancellationToken.None
+
+        let uri =
+            Uri.Mk(Wss, host)
+            |> Uri.With "streaming"
+            |> Uri.WithParameter "i" httpApi.Token.Value
+
+        printfn "connecting to %s" <| uri.ToString()
+
+        do!
+            websocket.ConnectAsync(System.Uri(uri.ToString()), cancellationToken)
+            |> Async.AwaitTask
+
+        printfn "connected"
+
+        let buffer = Array.zeroCreate<byte> 1024
+
+        let bufferSegment = ArraySegment(buffer)
+
+        let connectId = Guid.NewGuid().ToString()
+
+        // {
+        //     "type": "connect",
+        //     "body": {
+        //         "channel": "localTimeline",
+        //         "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        //     }
+
+        let mutable connect = JsonObject()
+        connect.Add("type", "connect")
+
+        let mutable body = JsonObject()
+        body.Add("channel", "homeTimeline")
+        body.Add("id", connectId)
+        connect.Add("body", body)
+
+        //
+
+        let bytes = connect.ToString() |> Encoding.UTF8.GetBytes |> ArraySegment
+
+        do!
+            websocket.SendAsync(bytes, WebSocketMessageType.Text, true, cancellationToken)
+            |> Async.AwaitTask
+
+        while true do
+            let! result = websocket.ReceiveAsync(bufferSegment, cancellationToken) |> Async.AwaitTask
+
+            let str = Encoding.UTF8.GetString(buffer, 0, result.Count)
+
+            printfn "received: %s" str
+
         return ()
-
-    //
-
-    let! create = httpApi.RequestApi([ "notes"; "create" ], Map.ofList [ "text", "テスト" ])
-
-    printfn "create: %s" <| create.ToString()
-
-    //
-
-    use websocket = new ClientWebSocket()
-
-    let cancellationToken = CancellationToken.None
-
-    let uri =
-        Uri.Mk(Wss, host)
-        |> Uri.With "streaming"
-        |> Uri.WithParameter "i" httpApi.Session.Uuid
-
-    printfn "uri: %s" <| uri.ToString() // DEBUG
-
-    do!
-        websocket.ConnectAsync(Uri(uri.ToString()), cancellationToken)
-        |> Async.AwaitTask
-
-    printfn "connected"
-
-    let buffer = Array.zeroCreate<byte> 1024
-
-    let bufferSegment = ArraySegment(buffer)
-
-    let connectId = Guid.NewGuid().ToString()
-
-    let connect =
-        JsonValue.Create
-            [ "type", JsonValue.Create("connect", null)
-              "body",
-              JsonValue.Create
-                  [ "channel", JsonValue.Create("localTimeline", null)
-                    "id", JsonValue.Create(connectId, null) ] ]
-
-    let str = connect.ToString()
-
-    let bytes = Encoding.UTF8.GetBytes(str)
-
-    let sendSegment = ArraySegment(bytes)
-
-    do!
-        websocket.SendAsync(sendSegment, WebSocketMessageType.Text, true, cancellationToken)
-        |> Async.AwaitTask
-
-    while true do
-        let! result = websocket.ReceiveAsync(bufferSegment, cancellationToken) |> Async.AwaitTask
-
-        let str = Encoding.UTF8.GetString(buffer, 0, result.Count)
-
-        printfn "received: %s" str
-
-    return ()
 }
 |> Async.RunSynchronously
