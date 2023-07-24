@@ -10,35 +10,13 @@ open System
 open System.Text
 open System.Text.Json.Nodes
 
-// TODO: 別ファイルに分ける．
-
-type IChannel =
-    abstract member Name: string
-
-type GlobalTimelineChannel() =
-    interface IChannel with
-        member __.Name = "globalTimeline"
-
-type HomeTimelineChannel() =
-    interface IChannel with
-        member __.Name = "homeTimeline"
-
-type HybridTimelineChannel() =
-    interface IChannel with
-        member __.Name = "hybridTimeline"
-
-type LocalTimelineChannel() =
-    interface IChannel with
-        member __.Name = "localTimeline"
-
-type MainChannel() =
-    interface IChannel with
-        member __.Name = "main"
-
 //
 
-type ChannelConnection() =
+type ChannelConnection(channel: IChannel) =
+    member val Channel = channel with get
     member val internal Uuid = Guid.NewGuid().ToString() with get
+
+//
 
 type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int) =
     static member private DEFAULT_BUFFER_SIZE = 65536
@@ -131,7 +109,7 @@ type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int
     /// <param name="cancellationToken">The cancellation token. キャンセルトークン．default: `CancellationToken.None`</param>
     /// <returns>A channel connection. チャンネル接続．</returns>
     member this.ConnectChannelAsync(channel: IChannel, ?cancellationToken: CancellationToken) =
-        let channelConnection = ChannelConnection()
+        let channelConnection = ChannelConnection(channel)
 
         // {
         //     "type": "connect",
@@ -152,3 +130,30 @@ type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int
             do! this.SendAsync(message, ?cancellationToken = cancellationToken)
             return channelConnection
         }
+
+    /// <summary>
+    /// Disconnects from a channel. \
+    /// チャンネルから切断します．
+    /// </summary>
+    /// <param name="channelConnection">A channel connection to disconnect. 切断するチャンネル接続．</param>
+    /// <param name="cancellationToken">The cancellation token. キャンセルトークン．default: `CancellationToken.None`</param>
+    member this.DisconnectChannelAsync(channelConnection: ChannelConnection, ?cancellationToken: CancellationToken) =
+        // {
+        //     "type": "disconnect",
+        //     "body": {
+        //         "id": "{channelConnection.Uuid}"
+        //     }
+        // }
+
+        let mutable message = JsonObject()
+        message.Add("type", "disconnect")
+        let mutable body = JsonObject()
+        body.Add("id", channelConnection.Uuid)
+        message.Add("body", body)
+
+        async {
+            do! this.SendAsync(message, ?cancellationToken = cancellationToken)
+            return ()
+        }
+
+// TODO: Implement subNote and unsubNote.
