@@ -7,3 +7,5 @@ bin
 Uri.Tests/TestResults/Ionide.trx
 .vscode/tasks.json
 Data/misskey-js.api.md
+.vs
+UpgradeLog.htm

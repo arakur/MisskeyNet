@@ -3,15 +3,16 @@ namespace Misskey.Net.HttpRequest
 open Misskey.Net.Uri
 open System.Net.Http
 open System.Text.Json.Nodes
+open System.Threading.Tasks
 
-type IHttpRequest =
-    abstract member Request: client: IHttpClientFactory * uri: Uri * ?content: StringContent -> Async<JsonNode>
+type internal IHttpRequest =
+    abstract member Request: client: IHttpClientFactory * uri: UriMk * ?content: StringContent -> Task<JsonNode>
 
-type Post() =
-    member __.Request(client: IHttpClientFactory, uri: Uri, ?content: StringContent) =
+type internal Post() =
+    member __.Request(client: IHttpClientFactory, uri: UriMk, ?content: StringContent) =
         let uri = uri.ToString()
 
-        async {
+        task {
             use request = new HttpRequestMessage(HttpMethod.Post, uri.ToString())
 
             match content with

@@ -7,6 +7,7 @@ open System.Text
 
 open Misskey.Net
 open Misskey.Net.Uri
+open Misskey.Net.Uri.UriMk
 open Misskey.Net.Utils.Measure
 
 //
@@ -37,10 +38,13 @@ type Session() =
 /// <param name="scheme">The scheme of the API. API のスキーム．</param>
 /// <param name="host">The host of the API. API のホスト．</param>
 /// <param name="client">The HTTP client. HTTP クライアント．</param>
-type HttpApi(host: string, client: IHttpClientFactory, ?scheme: Scheme) =
-    let scheme = defaultArg scheme Https
+type HttpApi(host: string, client: IHttpClientFactory, scheme: Scheme) =
     let mutable token = None
     let mutable authorizedUserId = None
+
+    //
+
+    new(host, client) = HttpApi(host, client, Http)
 
     //
 
@@ -55,7 +59,7 @@ type HttpApi(host: string, client: IHttpClientFactory, ?scheme: Scheme) =
     /// API の URI． \
     /// `scheme://host.name`
     /// </summary>
-    member val Uri = Uri.Mk(scheme, host) with get
+    member val Uri = UriMk(scheme, host) with get
 
     /// <summary>
     /// The access token. \
@@ -88,14 +92,14 @@ type HttpApi(host: string, client: IHttpClientFactory, ?scheme: Scheme) =
     /// API の URI． \
     /// `https://host.name/api`
     /// </summary>
-    member this.ApiUri = this.Uri |> Uri.withDirectory "api"
+    member this.ApiUri = this.Uri |> withDirectory "api"
 
     /// <summary>
     /// The URI of the API. \
     /// API の URI． \
     /// `https://host.name/api`
     /// </summary>
-    member this.StreamingUri = this.Uri |> Uri.withDirectory "api"
+    member this.StreamingUri = this.Uri |> withDirectory "api"
 
     /// <summary>
     /// The URI of the authorization page. \
@@ -103,7 +107,7 @@ type HttpApi(host: string, client: IHttpClientFactory, ?scheme: Scheme) =
     /// `https://host.name/miauth/sessionID`
     /// </summary>
     member this.MiAuthUri =
-        this.Uri |> Uri.withDirectory "miauth" |> Uri.withDirectory this.Session.Uuid
+        this.Uri |> withDirectory "miauth" |> withDirectory this.Session.Uuid
 
     // TODO: Add an option to specify permissions.
 
@@ -135,7 +139,7 @@ type HttpApi(host: string, client: IHttpClientFactory, ?scheme: Scheme) =
             [| nameQuery; iconQuery; callbackQuery; permissionsQuery |] |> Seq.choose id
 
         let miAuthUri =
-            this.MiAuthUri |> Uri.withParameters queries |> (fun uri -> uri.ToString())
+            this.MiAuthUri |> withParameters queries |> (fun uri -> uri.ToString())
 
         let fileName, arguments =
             match os with
@@ -147,7 +151,7 @@ type HttpApi(host: string, client: IHttpClientFactory, ?scheme: Scheme) =
             | PlatformID.MacOSX -> "sh", $"-c 'open {miAuthUri}'"
             | _ -> failwith "unsupported platform"
 
-        async {
+        task {
             let startInfo =
                 Diagnostics.ProcessStartInfo(
                     FileName = fileName,
@@ -174,11 +178,11 @@ type HttpApi(host: string, client: IHttpClientFactory, ?scheme: Scheme) =
     member this.CheckAsync() =
         let uri =
             this.ApiUri
-            |> Uri.withDirectory "miauth"
-            |> Uri.withDirectory this.Session.Uuid
-            |> Uri.withDirectory "check"
+            |> withDirectory "miauth"
+            |> withDirectory this.Session.Uuid
+            |> withDirectory "check"
 
-        async {
+        task {
             // post request
             use request = new HttpRequestMessage(HttpMethod.Post, uri.ToString())
 
@@ -221,14 +225,14 @@ type HttpApi(host: string, client: IHttpClientFactory, ?scheme: Scheme) =
 
         if this.Token.IsSome then
             printUnlessSilent "already authorized"
-            async { return true }
+            task { return true }
         else if timeout <= 0.<millisecond> then
             printUnlessSilent "timeout"
-            async { return false }
+            task { return false }
         else
             printUnlessSilent "checking..."
 
-            async {
+            task {
                 let! check = this.CheckAsync()
 
                 if check then
@@ -245,32 +249,30 @@ type HttpApi(host: string, client: IHttpClientFactory, ?scheme: Scheme) =
     /// API をリクエストします．
     /// </summary>
     /// <param name="endPointName">The name of the endpoint. エンドポイントの名前．</param>
-    /// <param name="payload">The payload. ペイロード．default: `Map.empty`</param>
+    /// <param name="payload">The payload. ペイロード．default: `[]`</param>
     /// <returns>
     /// The response. \
     /// レスポンス．
     /// </returns>
-    member this.RequestApiAsync(endPointNameSeq: string seq, ?payload: Map<string, string>) =
-        // The default payload is an empty map.
-        let payload = defaultArg payload Map.empty
+    member this.RequestApiAsync(endPointNameSeq: string seq, ?payload: (string * string) seq) =
+        let payload = defaultArg payload []
 
         // Add the access token to the payload if it exists.
         let payload =
             match this.Token with
-            | Some token -> payload |> Map.add "i" token
+            | Some token -> payload |> Seq.append [ "i", token ]
             | None -> payload
 
         // Make payload into JSON.
         let json =
             payload
-            |> Map.toSeq
-            |> map (fun (k, v) -> $"\"{k}\":\"{v}\"")
+            |> Seq.map (fun (k, v) -> $"\"{k}\":\"{v}\"")
             |> String.concat ","
             |> fun x -> $"{{{x}}}"
 
-        let uri = this.ApiUri |> Uri.withDirectories endPointNameSeq
+        let uri = this.ApiUri |> withDirectories endPointNameSeq
 
-        async {
+        task {
             use stringContent = new StringContent(json, Encoding.UTF8, "application/json")
 
             return! HttpRequest.Post().Request(this.Client, uri, stringContent)

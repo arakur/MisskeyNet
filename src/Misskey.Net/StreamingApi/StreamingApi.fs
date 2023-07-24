@@ -44,16 +44,16 @@ type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int
         // Add i parameter to the URI if the token is available.
         let withToken uri =
             this.HttpApi.Token
-            |> Option.map (fun token -> uri |> Uri.withParameter "i" token)
+            |> Option.map (fun token -> uri |> UriMk.withParameter "i" token)
             |> Option.defaultValue uri
 
         // Make a URI for the WebSocket.
         let uri =
-            Uri.Mk(Wss, this.HttpApi.Host) |> Uri.withDirectory "streaming" |> withToken
+            UriMk(Wss, this.HttpApi.Host) |> UriMk.withDirectory "streaming" |> withToken
 
         let systemUri = System.Uri(uri.ToString())
 
-        this.WebSocket.ConnectAsync(systemUri, cancellationToken) |> Async.AwaitTask
+        this.WebSocket.ConnectAsync(systemUri, cancellationToken)
 
     /// <summary>
     /// Receives a message from the streaming API. \
@@ -68,8 +68,8 @@ type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int
 
         let bufferSegment = ArraySegment(buffer)
 
-        async {
-            let! result = this.WebSocket.ReceiveAsync(bufferSegment, cancellationToken) |> Async.AwaitTask
+        task {
+            let! result = this.WebSocket.ReceiveAsync(bufferSegment, cancellationToken)
 
             let message =
                 Encoding.UTF8.GetString(bufferSegment.Array, bufferSegment.Offset, result.Count)
@@ -103,7 +103,6 @@ type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int
         let bytes = Encoding.UTF8.GetBytes(messageSerialized) |> ArraySegment
 
         this.WebSocket.SendAsync(bytes, messageType, endOfMessage, cancellationToken)
-        |> Async.AwaitTask
 
 
     /// <summary>
@@ -131,7 +130,7 @@ type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int
         body.Add("id", channelConnection.Uuid)
         message.Add("body", body)
 
-        async {
+        task {
             do! this.SendAsync(message, ?cancellationToken = cancellationToken)
             return channelConnection
         }
@@ -156,7 +155,7 @@ type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int
         body.Add("id", channelConnection.Uuid)
         message.Add("body", body)
 
-        async {
+        task {
             do! this.SendAsync(message, ?cancellationToken = cancellationToken)
             return ()
         }
@@ -182,7 +181,7 @@ type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int
         body.Add("id", noteId)
         message.Add("body", body)
 
-        async {
+        task {
             do! this.SendAsync(message, ?cancellationToken = cancellationToken)
             return NoteSubscription(noteId)
         }
@@ -207,7 +206,7 @@ type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int
         body.Add("id", noteId)
         message.Add("body", body)
 
-        async {
+        task {
             do! this.SendAsync(message, ?cancellationToken = cancellationToken)
             return ()
         }

@@ -54,77 +54,21 @@ type Scheme =
         | _ -> None
 
 /// <summary>
-/// A type of a URI. \
-/// URI の型です．
+/// URI builder. \
+/// URI ビルダー．
 /// </summary>
 /// <remarks>
 /// Directories are hold in _reverse_ order. They will be ordered in original order when stringified. \
 /// ディレクトリは _逆順_ で保持されます．文字列化されるときには元の順序で並べられます．
 /// </remarks>
-type Uri =
-    { Scheme: Scheme
-      Host: string
-      Directories: string list
-      Parameters: Map<string, string> }
+type UriMk(scheme: Scheme, host: string, ?directories: string list, ?parameters: Map<string, string>) =
+    let directories = defaultArg directories []
+    let parameters = defaultArg parameters Map.empty
 
-    /// <summary>
-    /// Creates a new URI without directories. \
-    /// ディレクトリを持たない新しい URI を作成します．
-    /// </summary>
-    /// <param name="scheme">A scheme of the URI. URI のスキーム．</param>
-    /// <param name="host">A host of the URI. URI のホスト．</param>
-    /// <returns>A new URI without directories. ディレクトリを持たない新しい URI．</returns>
-    static member Mk(scheme: Scheme, host: string) =
-        { Scheme = scheme
-          Host = host
-          Directories = []
-          Parameters = Map.empty }
-
-    /// <summary>
-    /// Returns a new URI added a directory. \
-    /// ディレクトリを追加した新しい URI を返します．
-    /// </summary>
-    /// <param name="dir">A directory to add. 追加するディレクトリ．</param>
-    /// <param name="this">A URI to add the segment. セグメントを追加する URI．</param>
-    /// <returns>A new URI added a directory. ディレクトリを追加した新しい URI．</returns>
-    static member withDirectory (dir: string) (this: Uri) =
-        { this with
-            Directories = dir :: this.Directories }
-
-    /// <summary>
-    /// Returns a new URI added directories. \
-    /// ディレクトリを追加した新しい URI を返します．
-    /// </summary>
-    /// <param name="directories">Directories to add. 追加するディレクトリ．</param>
-    /// <param name="this">A URI to add the directories. ディレクトリを追加する URI．</param>
-    /// <returns>A new URI added directories. ディレクトリを追加した新しい URI．</returns>
-    static member withDirectories (directories: string seq) (this: Uri) =
-        directories |> Seq.fold (fun acc x -> Uri.withDirectory x acc) this
-
-    /// <summary>
-    /// Returns a new URI added a parameter. \
-    /// パラメータを追加した新しい URI を返します．
-    /// </summary>
-    /// <param name="key">A key of the parameter. パラメータのキー．</param>
-    /// <param name="value">A value of the parameter. パラメータの値．</param>
-    /// <param name="this">A URI to add the parameter. パラメータを追加する URI．</param>
-    /// <returns>A new URI added a parameter. パラメータを追加した新しい URI．</returns>
-    static member withParameter (key: string) (value: string) (this: Uri) =
-        { this with
-            Parameters = this.Parameters.Add(key, value) }
-
-    /// <summary>
-    /// Returns a new URI added parameters. \
-    /// パラメータを追加した新しい URI を返します．
-    /// </summary>
-    /// <param name="parameters">Parameters to add. 追加するパラメータ．</param>
-    /// <param name="this">A URI to add the parameters. パラメータを追加する URI．</param>
-    /// <returns>A new URI added parameters. パラメータを追加した新しい URI．</returns>
-    static member withParameters (parameters: (string * string) seq) (this: Uri) =
-        let newParameters =
-            parameters |> Seq.fold (fun (acc: Map<_, _>) kv -> acc.Add kv) this.Parameters
-
-        { this with Parameters = newParameters }
+    member val Scheme = scheme with get, set
+    member val Host = host with get, set
+    member val Directories = directories with get, set
+    member val Parameters = parameters with get, set
 
 
     /// <summary>
@@ -155,16 +99,54 @@ type Uri =
 
     override this.ToString() = this.Compose()
 
-// TODO: remove this
-// /// <summary>
-// /// Create a post request to the URI. \
-// /// URI に対する POST リクエストを作成します．
-// /// </summary>
-// /// <remarks>
-// /// The return value must be bound by a `use` statement as the return is disposable. \
-// /// 返り値は破棄可能なので，`use` 文で束縛する必要があります．
-// ///　</remarks>
-// /// <param name="this">A URI to create a request. リクエストを作成する URI．</param>
-// /// <returns>A post request to the URI. URI に対する POST リクエスト．</returns>
-// static member Post(this: Uri) =
-//     new HttpRequestMessage(HttpMethod.Post, this.ToString())
+/// <summary>
+/// A utility module for <see cref="UriMk"/>. \
+/// <see cref="UriMk"/> のユーティリティモジュール．
+/// </summary>
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module UriMk =
+    /// <summary>
+    /// Returns a new URI added a directory. \
+    /// ディレクトリを追加した新しい URI を返します．
+    /// </summary>
+    /// <param name="dir">A directory to add. 追加するディレクトリ．</param>
+    /// <param name="this">A URI to add the segment. セグメントを追加する URI．</param>
+    /// <returns>A new URI added a directory. ディレクトリを追加した新しい URI．</returns>
+    let withDirectory (directory: string) (this: UriMk) =
+        // { this with
+        //     Directories = dir :: this.Directories }
+        UriMk(this.Scheme, this.Host, directories = directory :: this.Directories, parameters = this.Parameters)
+
+    /// <summary>
+    /// Returns a new URI added directories. \
+    /// ディレクトリを追加した新しい URI を返します．
+    /// </summary>
+    /// <param name="directories">Directories to add. 追加するディレクトリ．</param>
+    /// <param name="this">A URI to add the directories. ディレクトリを追加する URI．</param>
+    /// <returns>A new URI added directories. ディレクトリを追加した新しい URI．</returns>
+    let withDirectories (directories: string seq) (this: UriMk) =
+        directories |> Seq.fold (fun acc x -> withDirectory x acc) this
+
+    /// <summary>
+    /// Returns a new URI added a parameter. \
+    /// パラメータを追加した新しい URI を返します．
+    /// </summary>
+    /// <param name="key">A key of the parameter. パラメータのキー．</param>
+    /// <param name="value">A value of the parameter. パラメータの値．</param>
+    /// <param name="this">A URI to add the parameter. パラメータを追加する URI．</param>
+    /// <returns>A new URI added a parameter. パラメータを追加した新しい URI．</returns>
+    let withParameter (key: string) (value: string) (this: UriMk) =
+        UriMk(this.Scheme, this.Host, directories = this.Directories, parameters = this.Parameters.Add(key, value))
+
+    /// <summary>
+    /// Returns a new URI added parameters. \
+    /// パラメータを追加した新しい URI を返します．
+    /// </summary>
+    /// <param name="parameters">Parameters to add. 追加するパラメータ．</param>
+    /// <param name="this">A URI to add the parameters. パラメータを追加する URI．</param>
+    /// <returns>A new URI added parameters. パラメータを追加した新しい URI．</returns>
+    let withParameters (parameters: (string * string) seq) (this: UriMk) =
+        let newParameters =
+            parameters |> Seq.fold (fun (acc: Map<_, _>) kv -> acc.Add kv) this.Parameters
+
+        UriMk(this.Scheme, this.Host, directories = this.Directories, parameters = newParameters)
