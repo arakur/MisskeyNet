@@ -31,7 +31,6 @@
     <Compile Include="StreamingApi\StreamingApi.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Library.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharpPlus" Version="1.4.1" />
