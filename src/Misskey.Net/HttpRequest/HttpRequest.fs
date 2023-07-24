@@ -1,4 +1,4 @@
-﻿namespace Misskey.Net.HttpRequest
+namespace Misskey.Net.HttpRequest
 
 open Misskey.Net.Uri
 open System.Net.Http

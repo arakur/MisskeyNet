@@ -1,4 +1,4 @@
-module Misskey.Net.Uri.Tests
+module Misskey.Net.Test.Uri
 
 open Misskey.Net.Uri
 

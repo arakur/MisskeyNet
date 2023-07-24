@@ -7,10 +7,6 @@ open Misskey.Net.StreamingApi
 open System.Net.Http
 open Microsoft.Extensions.DependencyInjection
 open System.Net.WebSockets
-open System.Threading
-open System
-open System.Text
-open System.Text.Json.Nodes
 
 //
 

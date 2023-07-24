@@ -11,10 +11,6 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Uri\Uri.fsproj" />
-    <ProjectReference Include="..\Utils\Utils.fsproj" />
-    <ProjectReference Include="..\HttpApi\HttpApi.fsproj" />
-    <ProjectReference Include="..\Uri\Uri.fsproj" />
-    <ProjectReference Include="..\StreamingApi\StreamingApi.fsproj" />
+    <ProjectReference Include="..\Misskey.Net\Misskey.Net.fsproj" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-namespace Data
+namespace Misskey.Net.Data
 
 [<RequireQualifiedAccess>]
 module Instance =

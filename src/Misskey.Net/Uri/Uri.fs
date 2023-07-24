@@ -1,6 +1,5 @@
 ﻿namespace Misskey.Net.Uri
 
-open System.Net.Http
 open System.Web
 
 /// <summary>

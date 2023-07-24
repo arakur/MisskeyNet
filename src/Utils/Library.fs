@@ -1,1 +1,0 @@
-﻿namespace Misskey.Net.Utils
