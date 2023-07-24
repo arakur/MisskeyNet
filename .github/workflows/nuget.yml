@@ -27,7 +27,7 @@ jobs:
         working-directory: .
 
       - name: Pack
-        run: dotnet pack --configuration Release --no-build --no-restore --output nupkgs
+        run: dotnet pack --configuration Release --no-restore --output nupkgs
         working-directory: .
 
       - name: Publish
