@@ -23,12 +23,15 @@ type NoteSubscription(noteId: string) =
 
 //
 
-type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int) =
+type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, bufferSize: int) =
     static member private DEFAULT_BUFFER_SIZE = 65536
+
+    new(httpApi: HttpApi, webSocket: ClientWebSocket) =
+        new StreamingApi(httpApi, webSocket, StreamingApi.DEFAULT_BUFFER_SIZE)
 
     member val HttpApi = httpApi with get
     member val WebSocket = webSocket with get
-    member val BufferSize = defaultArg bufferSize StreamingApi.DEFAULT_BUFFER_SIZE with get
+    member val BufferSize = bufferSize with get
 
     interface IDisposable with
         member this.Dispose() = this.WebSocket.Dispose()

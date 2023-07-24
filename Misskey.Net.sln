@@ -11,13 +11,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{FE4FA998-C
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Misskey.Net.Test", "test\Misskey.Net.Test\Misskey.Net.Test.fsproj", "{E0A8E6D3-B29D-42D6-9750-F7E4DC1BE1B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpWrapper", "src\CSharpWrapper\CSharpWrapper.csproj", "{F49F36AE-6694-46D9-A5BC-8E7F2AD0C130}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Example", "Example", "{FA009551-466E-4E4D-809C-768FA37D234C}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp", "src\Example\FSharp\FSharp.fsproj", "{D678D8F9-941D-45FD-8180-C7062F134EB1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharp", "src\Example\CSharp\CSharp.csproj", "{EAECC8CF-9032-481F-A005-E9A883C76327}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpWrapper", "src\CSharpWrapper\CSharpWrapper.csproj", "{F49F36AE-6694-46D9-A5BC-8E7F2AD0C130}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

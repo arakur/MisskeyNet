@@ -65,13 +65,19 @@ task {
             // Subscribe to global timeline.
             let! result = streamingApi.ReceiveAsync()
 
-            let textNode = result.["body"].["body"].["text"]
+            let content = result.["body"]
 
-            if textNode = null then
-                let renoteNode = result.["body"].["body"].["renote"].["text"]
-                printfn "renote: %s" <| renoteNode.ToString()
-            else
-                printfn "text: %s" <| textNode.ToString()
+            let body = if content.["body"] = null then null else content.["body"]
+
+            if body <> null then
+                let text = result.["body"].["body"].["text"]
+
+                if text = null then
+                    let renoteNode = body.["renote"]
+                    let renote = if renoteNode = null then null else renoteNode.["text"]
+                    printfn "renote: %s" <| renote.ToString()
+                else
+                    printfn "text: %s" <| text.ToString()
 
         return ()
 }

@@ -3,7 +3,6 @@
 using Misskey.Net.Uri;
 using Misskey.Net.HttpApi;
 using Misskey.Net.StreamingApi;
-using Misskey.Net.CSharpWrapper.HttpApi;
 
 using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,23 +61,30 @@ else
     Console.WriteLine("connected");
 
     // Connect to global timeline.
-    var channelConnection = await streamingApi.ConnectChannelAsync(Channel.GlobalTimeline());
+    var channelConnection = await streamingApi.ConnectChannelAsync(new Channel.GlobalTimeline());
 
     while (true)
     {
         // Subscribe to global timeline.
         var result = await streamingApi.ReceiveAsync();
 
-        var textNode = result["body"]["body"]["text"];
+        var content = result["body"];
 
-        if (textNode == null)
+        var body = content == null ? null : content["body"];
+
+        if (body != null)
         {
-            var renoteNode = result["body"]["body"]["renote"]["text"];
-            Console.WriteLine($"renote: {renoteNode}");
-        }
-        else
-        {
-            Console.WriteLine($"text: {textNode}");
+            var textNode = body["text"];
+            if (textNode == null)
+            {
+                var renoteNode = body == null ? null : body["renote"];
+                var renoteText = renoteNode == null ? null : renoteNode["text"];
+                Console.WriteLine($"renote: {renoteText}");
+            }
+            else
+            {
+                Console.WriteLine($"text: {textNode}");
+            }
         }
     }
 }

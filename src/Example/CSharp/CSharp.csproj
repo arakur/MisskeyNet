@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Misskey.Net\Misskey.Net.fsproj" />
+    <ProjectReference Include="..\..\CSharpWrapper\CSharpWrapper.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
