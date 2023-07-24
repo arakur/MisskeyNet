@@ -1,6 +1,7 @@
 ﻿namespace StreamingApi
 
 // TODO: Use a kind of ClientWebSocketFactory instead of ClientWebSocket.
+// TODO: Return messages with deserializing.
 
 open Uri
 open HttpApi
@@ -15,6 +16,9 @@ open System.Text.Json.Nodes
 type ChannelConnection(channel: IChannel) =
     member val Channel = channel with get
     member val internal Uuid = Guid.NewGuid().ToString() with get
+
+type NoteSubscription(noteId: string) =
+    member val NoteId = noteId with get
 
 //
 
@@ -156,4 +160,53 @@ type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, ?bufferSize: int
             return ()
         }
 
-// TODO: Implement subNote and unsubNote.
+    /// <summary>
+    /// Captures a note. \
+    /// ノートをキャプチャします．
+    /// </summary>
+    /// <param name="noteId">A note ID to subscribe. 購読するノート ID．</param>
+    /// <param name="cancellationToken">The cancellation token. キャンセルトークン．default: `CancellationToken.None`</param>
+    /// <returns>An object that contains the note ID. ノート ID を含むオブジェクト．</returns>
+    member this.SubNoteAsync(noteId: string, ?cancellationToken: CancellationToken) =
+        // {
+        //     "type": "subNote",
+        //     "body": {
+        //         "id": "{noteId}",
+        //     }
+        // }
+
+        let mutable message = JsonObject()
+        message.Add("type", "subNote")
+        let mutable body = JsonObject()
+        body.Add("id", noteId)
+        message.Add("body", body)
+
+        async {
+            do! this.SendAsync(message, ?cancellationToken = cancellationToken)
+            return NoteSubscription(noteId)
+        }
+
+    /// <summary>
+    /// Uncaptures a note. \
+    /// ノートのキャプチャを解除します．
+    /// </summary>
+    /// <param name="noteId">A note ID to unsubscribe. 購読解除するノート ID．</param>
+    /// <param name="cancellationToken">The cancellation token. キャンセルトークン．default: `CancellationToken.None`</param>
+    member this.UnsubNoteAsync(noteId: string, ?cancellationToken: CancellationToken) =
+        // {
+        //     "type": "unsubNote",
+        //     "body": {
+        //         "id": "{noteId}",
+        //     }
+        // }
+
+        let mutable message = JsonObject()
+        message.Add("type", "unsubNote")
+        let mutable body = JsonObject()
+        body.Add("id", noteId)
+        message.Add("body", body)
+
+        async {
+            do! this.SendAsync(message, ?cancellationToken = cancellationToken)
+            return ()
+        }

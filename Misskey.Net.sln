@@ -19,6 +19,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "StreamingApi", "StreamingAp
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "HttpApiTests", "HttpApiTests\HttpApiTests.fsproj", "{F5F7DEBA-0490-4A74-A4AE-C9E90E57852E}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Data", "Data\Data.fsproj", "{1960D36E-8619-4CC2-ACBD-C3F8E25F24E2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,5 +66,9 @@ Global
 		{F5F7DEBA-0490-4A74-A4AE-C9E90E57852E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5F7DEBA-0490-4A74-A4AE-C9E90E57852E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5F7DEBA-0490-4A74-A4AE-C9E90E57852E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1960D36E-8619-4CC2-ACBD-C3F8E25F24E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1960D36E-8619-4CC2-ACBD-C3F8E25F24E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1960D36E-8619-4CC2-ACBD-C3F8E25F24E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1960D36E-8619-4CC2-ACBD-C3F8E25F24E2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
