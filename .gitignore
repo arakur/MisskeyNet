@@ -6,3 +6,4 @@ bin
 */.vscode/settings.json
 Uri.Tests/TestResults/Ionide.trx
 .vscode/tasks.json
+Data/misskey-js.api.md
