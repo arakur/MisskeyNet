@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/nuget.yml"
       - "src/Misskey.Net/**"
+      - "src/CSharpWrapper/**"
 
 jobs:
   publish:
@@ -19,18 +20,18 @@ jobs:
         with:
           dotnet-version: 7.0.*
 
-      - name: Build
-        run: dotnet build --configuration Release
-        working-directory: .
+      - name: Build CSharpWrapper
+        run: dotnet build --configuration Release ./src/CSharpWrapper/CSharpWrapper.csproj
+
+      - name: Build Misskey.Net
+        run: dotnet build --configuration Release ./src/Misskey.Net/Misskey.Net.fsproj
 
       - name: Test
         run: dotnet test --configuration Release
         working-directory: .
 
       - name: Pack
-        run: dotnet pack --configuration Release --no-restore --output nupkgs
-        working-directory: .
+        run: dotnet pack --configuration Release ./src/Misskey.Net/Misskey.Net.fsproj --no-restore --output nupkgs
 
       - name: Publish
         run: dotnet nuget push ./nupkgs/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate --api-key ${{ secrets.NUGET_API_KEY }}
-        working-directory: .
