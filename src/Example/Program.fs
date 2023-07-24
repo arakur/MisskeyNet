@@ -52,12 +52,13 @@ async {
         while true do
             let! result = streamingApi.ReceiveAsync()
 
-            let text = result.["body"].["body"].["text"].ToString()
+            let textNode = result.["body"].["body"].["text"]
 
-            let str = result.ToString()
-
-            printfn "received: %s" str
-            printfn "text: %s" text
+            if textNode = null then
+                let renoteNode = result.["body"].["body"].["renote"].["text"]
+                printfn "renote: %s" <| renoteNode.ToString()
+            else
+                printfn "text: %s" <| textNode.ToString()
 
         return ()
 }
