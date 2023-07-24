@@ -25,13 +25,10 @@ jobs:
         working-directory: .
 
       - name: Pack
-        run: dotnet pack --configuration Release -o nupkg
+        run: dotnet pack --configuration Release --output ./nupkg
         working-directory: .
 
       - name: Publish
-        uses: brandedoutcast/publish-nuget@v2
-        with:
-          PROJECT_PATH: ./nupkg/*.nupkg
-          VERSION_REGEX: '^\s*<PackageVersion>(.*)<\/PackageVersion>\s*$'
-          TAG_FORMAT: "*"
-          NUGET_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: find . -type f -name '*.nupkg' -print0 | xargs -0 -I pkg dotnet nuget push pkg -k $nuget_api_key -s "https://api.nuget.org/v3/index.json" --skip-duplicate
+        env:
+          nuget_api_key: ${{ secrets.NUGET_API_KEY }}
