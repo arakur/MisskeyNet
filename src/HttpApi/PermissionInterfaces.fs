@@ -1,4 +1,4 @@
-namespace HttpApi
+namespace Misskey.Net.HttpApi
 
 /// <summary>
 /// An interface for access permissions. \

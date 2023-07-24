@@ -1,6 +1,6 @@
-module Uri.Tests
+module Misskey.Net.Uri.Tests
 
-open Uri
+open Misskey.Net.Uri
 
 open NUnit.Framework
 open Microsoft.FSharp.Reflection

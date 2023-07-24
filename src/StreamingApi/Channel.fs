@@ -1,4 +1,4 @@
-namespace StreamingApi
+namespace Misskey.Net.StreamingApi
 
 type IChannel =
     abstract member Name: string

@@ -1,4 +1,4 @@
-module HttpApiTests
+module Misskey.Net.HttpApiTests
 
 open NUnit.Framework
 

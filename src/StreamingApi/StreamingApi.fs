@@ -1,10 +1,11 @@
-﻿namespace StreamingApi
+﻿namespace Misskey.Net.StreamingApi
 
 // TODO: Use a kind of ClientWebSocketFactory instead of ClientWebSocket.
 // TODO: Return messages with deserializing.
 
-open Uri
-open HttpApi
+open Misskey.Net.Uri
+open Misskey.Net.HttpApi
+
 open System.Net.WebSockets
 open System.Threading
 open System

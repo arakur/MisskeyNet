@@ -1,1 +1,1 @@
-namespace Utils.HttpRequest
+namespace Misskey.Net.Utils.HttpRequest

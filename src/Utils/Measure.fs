@@ -1,4 +1,4 @@
-namespace Utils.Measure
+namespace Misskey.Net.Utils.Measure
 
 /// <summary>
 /// A measure of millisecond. \

@@ -1,6 +1,6 @@
-﻿namespace HttpRequest
+﻿namespace Misskey.Net.HttpRequest
 
-open Uri
+open Misskey.Net.Uri
 open System.Net.Http
 open System.Text.Json.Nodes
 

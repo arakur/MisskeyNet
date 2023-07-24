@@ -1,8 +1,9 @@
 ﻿open FSharpPlus
 
-open Uri
-open HttpApi
-open StreamingApi
+open Misskey.Net.Uri
+open Misskey.Net.HttpApi
+open Misskey.Net.StreamingApi
+
 open System.Net.Http
 open Microsoft.Extensions.DependencyInjection
 open System.Net.WebSockets

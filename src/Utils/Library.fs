@@ -1,1 +1,1 @@
-﻿namespace Utils
+﻿namespace Misskey.Net.Utils

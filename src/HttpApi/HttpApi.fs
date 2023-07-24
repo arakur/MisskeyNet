@@ -1,12 +1,13 @@
-﻿namespace HttpApi
+﻿namespace Misskey.Net.HttpApi
 
 open FSharpPlus
 open System
 open System.Net.Http
 open System.Text
 
-open Utils.Measure
-open Uri
+open Misskey.Net
+open Misskey.Net.Uri
+open Misskey.Net.Utils.Measure
 
 //
 
