@@ -31,7 +31,7 @@ jobs:
       - name: Publish
         uses: brandedoutcast/publish-nuget@v2
         with:
-          nuget-api-key: ${{ secrets.NUGET_API_KEY }}
-          nuget-version: ${{ github.ref }}
-          source: https://api.nuget.org/v3/index.json
-          package: ./nupkg/*.nupkg
+          PROJECT_PATH: ./nupkg/*.nupkg
+          VERSION_REGEX: '^\s*<PackageVersion>(.*)<\/PackageVersion>\s*$'
+          TAG_FORMAT: "*"
+          NUGET_KEY: ${{ secrets.NUGET_API_KEY }}
