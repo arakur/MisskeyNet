@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Uri\Uri.fsproj" />
+    <ProjectReference Include="..\..\src\Uri\Uri.fsproj" />
   </ItemGroup>
 
 </Project>
