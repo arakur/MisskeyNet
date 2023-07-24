@@ -11,7 +11,7 @@ Misskey API の .NET ライブラリの別実装です．
 
 ## Usage
 
-`src/Example/Program.fs` にサンプルコードがあります．
+`src/Example/FSharp/Program.fs` および `src/Example/CSharp/Program.cs` にサンプルコードがあります．
 
 ### F\#
 
