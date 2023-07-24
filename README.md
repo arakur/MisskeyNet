@@ -12,16 +12,13 @@ Misskey API の .NET ライブラリの別実装です．
 ```fsharp
 open FSharpPlus
 
-open Uri
-open HttpApi
-open StreamingApi
+open Misskey.Net.Uri
+open Misskey.Net.HttpApi
+open Misskey.Net.StreamingApi
+
 open System.Net.Http
 open Microsoft.Extensions.DependencyInjection
 open System.Net.WebSockets
-open System.Threading
-open System
-open System.Text
-open System.Text.Json.Nodes
 
 //
 
