@@ -11,13 +11,13 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Utils", "src\Utils\Utils.fs
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Uri", "src\Uri\Uri.fsproj", "{B14A64AD-3E3D-4CA5-9BC9-9FC2CAD979F7}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Uri.Tests", "src\Uri.Tests\Uri.Tests.fsproj", "{75023E52-84F9-4F9B-9208-9FD18D72F2F4}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Uri.Tests", "test\Uri.Tests\Uri.Tests.fsproj", "{75023E52-84F9-4F9B-9208-9FD18D72F2F4}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "HttpRequest", "src\HttpRequest\HttpRequest.fsproj", "{5A1CE72F-B783-4DD3-9F8D-355077F43522}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "StreamingApi", "src\StreamingApi\StreamingApi.fsproj", "{1B044E11-5636-4447-A2A9-A9AD0C94E15A}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "HttpApiTests", "src\HttpApiTests\HttpApiTests.fsproj", "{F5F7DEBA-0490-4A74-A4AE-C9E90E57852E}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "HttpApiTests", "test\HttpApi.Tests\HttpApi.Tests.fsproj", "{F5F7DEBA-0490-4A74-A4AE-C9E90E57852E}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Data", "src\Data\Data.fsproj", "{1960D36E-8619-4CC2-ACBD-C3F8E25F24E2}"
 EndProject
