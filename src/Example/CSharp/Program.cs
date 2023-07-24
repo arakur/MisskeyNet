@@ -1,6 +1,4 @@
-﻿// Console.WriteLine("TODO");
-
-using Misskey.Net.Uri;
+﻿using Misskey.Net.Uri;
 using Misskey.Net.HttpApi;
 using Misskey.Net.StreamingApi;
 
