@@ -21,11 +21,11 @@ jobs:
         working-directory: .
 
       - name: Test
-        run: dotnet test --no-build --configuration Release --verbosity normal
+        run: dotnet test --configuration Release
         working-directory: .
 
       - name: Pack
-        run: dotnet pack --no-build --configuration Release --output nupkg
+        run: dotnet pack --configuration Release --ou nupkg
         working-directory: .
 
       - name: Publish
