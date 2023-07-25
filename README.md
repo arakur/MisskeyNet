@@ -23,7 +23,6 @@ open Misskey.Net.StreamingApi
 open System.Net.Http
 open Microsoft.Extensions.DependencyInjection
 open System.Net.WebSockets
-open FSharpPlus
 
 //
 
