@@ -44,45 +44,87 @@ if (!check)
 {
     Console.WriteLine("authorization failed");
 }
-else
+
+Console.WriteLine("authorization completed");
+
+//
+
+// Create StreamingApi instance.
+using var streamingApi = new StreamingApi(httpApi: httpApi, webSocket: new ClientWebSocket());
+
+// Connect to Misskey instance.
+await streamingApi.ConnectStreamingAsync();
+
+Console.WriteLine("connected");
+
+// Connect to global timeline.
+var channelConnection = await streamingApi.ConnectChannelAsync(new Channel.GlobalTimeline());
+
+while (true)
 {
-    Console.WriteLine("authorization completed");
+    // Subscribe to global timeline.
+    var result = await streamingApi.ReceiveAsync();
 
-    //
+    var content = result["body"];
 
-    // Create StreamingApi instance.
-    using var streamingApi = new StreamingApi(httpApi: httpApi, webSocket: new ClientWebSocket());
+    var body = (content == null) ? null : content["body"];
 
-    // Connect to Misskey instance.
-    await streamingApi.ConnectStreamingAsync();
-
-    Console.WriteLine("connected");
-
-    // Connect to global timeline.
-    var channelConnection = await streamingApi.ConnectChannelAsync(new Channel.GlobalTimeline());
-
-    while (true)
+    if (body != null)
     {
-        // Subscribe to global timeline.
-        var result = await streamingApi.ReceiveAsync();
+        var user = body["user"];
 
-        var content = result["body"];
+        var nameNode = (user == null) ? "<unknown>" : user["name"];
 
-        var body = content == null ? null : content["body"];
+        var name = (nameNode == null) ? "<unknown>" : nameNode.ToString();
 
-        if (body != null)
+        var renote = body["renote"];
+
+        if (renote == null)
         {
-            var textNode = body["text"];
-            if (textNode == null)
+            Console.WriteLine("-- text --");
+
+            Console.WriteLine($"user: {name}");
+
+            var text = body["text"];
+
+            if (text != null)
             {
-                var renoteNode = body == null ? null : body["renote"];
-                var renoteText = renoteNode == null ? null : renoteNode["text"];
-                Console.WriteLine($"renote: {renoteText}");
+                Console.WriteLine($"text: {text}");
             }
             else
             {
-                Console.WriteLine($"text: {textNode}");
+                Console.WriteLine("text: <image only>");
+            }
+        }
+        else
+        {
+            Console.WriteLine("-- renote --");
+
+            var text = renote["text"];
+
+            var renotedUser = renote["user"];
+
+            var renotedNameNode = (renotedUser == null) ? "<unknown>" : renotedUser["name"];
+
+            var renotedName = (renotedNameNode == null) ? "<unknown>" : renotedNameNode.ToString();
+
+            Console.WriteLine($"user: {renotedName}");
+
+            Console.WriteLine($"renoted by: {name}");
+
+            if (text != null)
+            {
+                Console.WriteLine($"text: {text}");
+            }
+            else
+            {
+                Console.WriteLine("text: <image only>");
             }
         }
     }
+    else
+    {
+        Console.WriteLine("unknown");
+    }
 }
+
