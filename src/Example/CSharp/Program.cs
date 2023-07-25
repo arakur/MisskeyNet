@@ -67,13 +67,13 @@ while (true)
 
     var content = result["body"];
 
-    var body = (content == null) ? null : content["body"];
+    var body = content?["body"];
 
     if (body != null)
     {
         var user = body["user"];
 
-        var nameNode = (user == null) ? "<unknown>" : user["name"];
+        var nameNode = user?["name"];
 
         var name = (nameNode == null) ? "<unknown>" : nameNode.ToString();
 
@@ -104,9 +104,9 @@ while (true)
 
             var renotedUser = renote["user"];
 
-            var renotedNameNode = (renotedUser == null) ? "<unknown>" : renotedUser["name"];
+            var renotedNameNode = renotedUser?["name"];
 
-            var renotedName = (renotedNameNode == null) ? "<unknown>" : renotedNameNode.ToString();
+            var renotedName = renotedNameNode == null ? "<unknown>" : renotedNameNode.ToString();
 
             Console.WriteLine($"user: {renotedName}");
 
