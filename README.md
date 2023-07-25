@@ -35,69 +35,104 @@ let host = "misskey.systems"
 
 //
 
+let client =
+    ServiceCollection() // Create DI container.
+        .AddHttpClient() // Add HttpClient to DI container.
+        .BuildServiceProvider() // Build DI container.
+        .GetService<IHttpClientFactory>() // Get IHttpClientFactory from DI container.
+
+// Create HttpApi instance.
+let httpApi = HttpApi(scheme = Https, host = host, client = client)
+
+// Get stats of Misskey instance.
+let stats =
+    httpApi.RequestApiAsync [ "stats" ] |> Async.AwaitTask |> Async.RunSynchronously
+
+printfn "stats: %s" <| stats.ToString()
+
+let auth =
+    task {
+        // Authorize this app to Misskey instance with permission `read:account` (but not required).
+        do! httpApi.AuthorizeAsync(name = appName, permissions = [| Permission.Read <| PermissionKind.Account() |])
+
+        // Wait for authorization.
+        return! httpApi.WaitCheckAsync()
+    }
+    |> Async.AwaitTask
+    |> Async.RunSynchronously
+
+if auth = false then
+    failwith "authorization failed"
+
 task {
-    let client =
-        ServiceCollection() // Create DI container.
-            .AddHttpClient() // Add HttpClient to DI container.
-            .BuildServiceProvider() // Build DI container.
-            .GetService<IHttpClientFactory>() // Get IHttpClientFactory from DI container.
+    // Create StreamingApi instance.
+    use streamingApi =
+        new StreamingApi(httpApi = httpApi, webSocket = new ClientWebSocket())
 
-    // Create HttpApi instance.
-    let httpApi = HttpApi(scheme = Https, host = host, client = client)
+    // Connect to Misskey instance.
+    do! streamingApi.ConnectStreamingAsync()
 
-    //
+    printfn "connected"
 
-    // Get stats of Misskey instance.
-    let! stats = httpApi.RequestApiAsync [ "stats" ]
+    // Connect to global timeline.
+    let! _channelConnection = streamingApi.ConnectChannelAsync(Channel.GlobalTimeline())
 
-    printfn "stats: %s" <| stats.ToString()
+    while true do
+        // Subscribe to global timeline.
+        let! result = streamingApi.ReceiveAsync()
 
-    //
+        let content = result.["body"]
 
-    // Authorize this app to Misskey instance with permission `read:account` (but not required).
-    do! httpApi.AuthorizeAsync(name = appName, permissions = [| Permission.Read <| PermissionKind.Account() |])
+        let body = if content = null then null else content.["body"]
 
-    // Wait for authorization.
-    let! check = httpApi.WaitCheckAsync()
+        if body <> null then
 
-    if not check then
-        printfn "authorization failed"
-    else
-        printfn "authorization completed"
+            let user = body.["user"]
 
-        //
+            let nameNode = if user = null then null else user.["name"]
 
-        // Create StreamingApi instance.
-        use streamingApi =
-            new StreamingApi(httpApi = httpApi, webSocket = new ClientWebSocket())
+            let name = if nameNode = null then "<unknown>" else nameNode.ToString()
 
-        // Connect to Misskey instance.
-        do! streamingApi.ConnectStreamingAsync()
+            let renote = body.["renote"]
 
-        printfn "connected"
+            if renote = null then
+                printfn "-- text --"
 
-        // Connect to global timeline.
-        let! _channelConnection = streamingApi.ConnectChannelAsync(Channel.GlobalTimeline())
+                printfn "user: %s" <| name
 
-        while true do
-            // Subscribe to global timeline.
-            let! result = streamingApi.ReceiveAsync()
+                let text = body.["text"]
 
-            let content = result.["body"]
-
-            let body = if content.["body"] = null then null else content.["body"]
-
-            if body <> null then
-                let text = result.["body"].["body"].["text"]
-
-                if text = null then
-                    let renoteNode = body.["renote"]
-                    let renote = if renoteNode = null then null else renoteNode.["text"]
-                    printfn "renote: %s" <| renote.ToString()
-                else
+                if text <> null then
                     printfn "text: %s" <| text.ToString()
+                else
+                    printfn "text: <image only>"
+            else
+                printfn "-- renote --"
 
-        return ()
+                let text = renote.["text"]
+
+                let renotedUser = renote.["user"]
+
+                let renotedNameNode = if renotedUser = null then null else renotedUser.["name"]
+
+                let renotedName =
+                    if renotedNameNode = null then
+                        "<unknown>"
+                    else
+                        renotedNameNode.ToString()
+
+                printfn "user: %s" <| renotedName
+
+                printfn "renoted by: %s" <| name
+
+                if text <> null then
+                    printfn "text: %s" <| text.ToString()
+                else
+                    printfn "text: <image only>"
+        else
+            printfn "unknown"
+
+    return ()
 }
 |> Async.AwaitTask
 |> Async.RunSynchronously
@@ -152,46 +187,87 @@ if (!check)
 {
     Console.WriteLine("authorization failed");
 }
-else
+
+Console.WriteLine("authorization completed");
+
+//
+
+// Create StreamingApi instance.
+using var streamingApi = new StreamingApi(httpApi: httpApi, webSocket: new ClientWebSocket());
+
+// Connect to Misskey instance.
+await streamingApi.ConnectStreamingAsync();
+
+Console.WriteLine("connected");
+
+// Connect to global timeline.
+var channelConnection = await streamingApi.ConnectChannelAsync(new Channel.GlobalTimeline());
+
+while (true)
 {
-    Console.WriteLine("authorization completed");
+    // Subscribe to global timeline.
+    var result = await streamingApi.ReceiveAsync();
 
-    //
+    var content = result["body"];
 
-    // Create StreamingApi instance.
-    using var streamingApi = new StreamingApi(httpApi: httpApi, webSocket: new ClientWebSocket());
+    var body = (content == null) ? null : content["body"];
 
-    // Connect to Misskey instance.
-    await streamingApi.ConnectStreamingAsync();
-
-    Console.WriteLine("connected");
-
-    // Connect to global timeline.
-    var channelConnection = await streamingApi.ConnectChannelAsync(new Channel.GlobalTimeline());
-
-    while (true)
+    if (body != null)
     {
-        // Subscribe to global timeline.
-        var result = await streamingApi.ReceiveAsync();
+        var user = body["user"];
 
-        var content = result["body"];
+        var nameNode = (user == null) ? "<unknown>" : user["name"];
 
-        var body = content == null ? null : content["body"];
+        var name = (nameNode == null) ? "<unknown>" : nameNode.ToString();
 
-        if (body != null)
+        var renote = body["renote"];
+
+        if (renote == null)
         {
-            var textNode = body["text"];
-            if (textNode == null)
+            Console.WriteLine("-- text --");
+
+            Console.WriteLine($"user: {name}");
+
+            var text = body["text"];
+
+            if (text != null)
             {
-                var renoteNode = body == null ? null : body["renote"];
-                var renoteText = renoteNode == null ? null : renoteNode["text"];
-                Console.WriteLine($"renote: {renoteText}");
+                Console.WriteLine($"text: {text}");
             }
             else
             {
-                Console.WriteLine($"text: {textNode}");
+                Console.WriteLine("text: <image only>");
             }
         }
+        else
+        {
+            Console.WriteLine("-- renote --");
+
+            var text = renote["text"];
+
+            var renotedUser = renote["user"];
+
+            var renotedNameNode = (renotedUser == null) ? "<unknown>" : renotedUser["name"];
+
+            var renotedName = (renotedNameNode == null) ? "<unknown>" : renotedNameNode.ToString();
+
+            Console.WriteLine($"user: {renotedName}");
+
+            Console.WriteLine($"renoted by: {name}");
+
+            if (text != null)
+            {
+                Console.WriteLine($"text: {text}");
+            }
+            else
+            {
+                Console.WriteLine("text: <image only>");
+            }
+        }
+    }
+    else
+    {
+        Console.WriteLine("unknown");
     }
 }
 ```
