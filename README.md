@@ -3,7 +3,7 @@
 Misskey API の .NET ライブラリの別実装です．
 
 既存のライブラリとしては公式の実装 [Misq](https://github.com/syuilo/Misq) があります．
-本ライブラリでは上記ライブラリの機能に加え，MiAuth 認証方式への対応とストリーミング API のラップを行っています．
+本ライブラリでは上記ライブラリの機能に加え，MiAuth 認証方式への対応とストリーミング API のラップを提供しています．
 
 ## Installation
 
