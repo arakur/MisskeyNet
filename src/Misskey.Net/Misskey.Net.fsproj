@@ -3,41 +3,19 @@
     <TargetFramework>net7.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-
   <ItemGroup>
-    <Compile Include="Utils\Measure.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Uri\Uri.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Data\DateString.fs" />
-    <Compile Include="Data\DriveFile.fs" />
-    <Compile Include="Data\Instance.fs" />
-    <Compile Include="Data\OnlineStatus.fs" />
-    <Compile Include="Data\User.fs" />
-    <Compile Include="Data\Visibility.fs" />
-    <Compile Include="Data\Note.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="HttpRequest\HttpRequest.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="HttpApi\PermissionInterfaces.fs" />
-    <Compile Include="HttpApi\Permission.fs" />
-    <Compile Include="HttpApi\HttpApi.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="StreamingApi\Channel.fs" />
-    <Compile Include="StreamingApi\StreamingApi.fs" />
-  </ItemGroup>
-  <ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
+    <Compile Include="Measure.fs" />
+    <Compile Include="Uri.fs" />
+    <Compile Include="Data.fs" />
+    <Compile Include="Response.fs" />
+    <Compile Include="HttpRequest.fs" />
+    <Compile Include="Permission.Interfaces.fs" />
+    <Compile Include="Permission.Kind.fs" />
+    <Compile Include="HttpApi.fs" />
+    <Compile Include="Channel.fs" />
+    <Compile Include="StreamingApi.fs" />
     <PackageReference Include="FSharpPlus" Version="1.4.1" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="..\CSharpWrapper\bin\Release\net7.0\*.dll">
       <PackagePath>lib/net7.0/</PackagePath>
       <Pack>true</Pack>

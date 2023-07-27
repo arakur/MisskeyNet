@@ -5,12 +5,14 @@
 
 open Misskey.Net.Uri
 open Misskey.Net.HttpApi
+open Misskey.Net.Data
 
 open System.Net.WebSockets
 open System.Threading
 open System
 open System.Text
 open System.Text.Json.Nodes
+open Misskey.Net.Data
 
 //
 
@@ -19,7 +21,7 @@ type ChannelConnection(channel: IChannel) =
     member val internal Uuid = Guid.NewGuid().ToString() with get
 
 type NoteSubscription(noteId: string) =
-    member val NoteId = noteId with get
+    member val internal NoteId = noteId with get
 
 //
 
@@ -79,7 +81,7 @@ type StreamingApi(httpApi: HttpApi, webSocket: ClientWebSocket, bufferSize: int)
 
             let messageDeserialized = JsonValue.Parse message
 
-            return messageDeserialized
+            return StreamMessage.ofJson messageDeserialized
         }
 
     /// <summary>
