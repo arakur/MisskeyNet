@@ -105,21 +105,26 @@ task {
 
                 match note.Renote with
                 | None ->
+                    let text = defaultArg note.Text "<image only>"
                     printfn "-- note --"
                     printfn "user: %s" name
-                    printfn "text: %s" <| defaultArg note.Text "<no text>"
+                    printfn "text: %s" text
                 | Some renote ->
+                    let original = defaultArg renote.User.Name "<no name>"
+                    let text = defaultArg renote.Text "<image only>"
                     printfn "-- renote --"
-                    printfn "user: %s" name
-                    printfn "renoted by: %s" <| defaultArg renote.User.Name "<no name>"
-                    printfn "text: %s" <| defaultArg renote.Text "<no text>"
+                    printfn "user: %s" original
+                    printfn "renoted by: %s" name
+                    printfn "text: %s" text
             | ChannelMessageBody.Notification notification ->
                 match notification.Body with
                 | Notification.Body.OfReaction reaction ->
+                    let user = defaultArg reaction.User.Name "<no name>"
+                    let text = defaultArg reaction.Note.Text "<image only>"
                     printfn "-- reaction --"
-                    printfn "user: %s" <| defaultArg reaction.User.Name "<no name>"
-                    printfn "reaction: %s" <| reaction.Reaction
-                    printfn "note: %s" <| defaultArg reaction.Note.Text "<no text>"
+                    printfn "user: %s" user
+                    printfn "reaction: %s" reaction.Reaction
+                    printfn "note: %s" text
                 | _ ->
                     printfn "-- other notification --"
                     printfn "%s" <| notification.Body.ToString()

@@ -97,22 +97,26 @@ while (true)
 
                     var user = note.User;
 
-                    var name = user?.Name.Value ?? "<no name>";
+                    // if user.Name is some then name = user.Name else name = "<no name>"
+                    var name = FSharpOption<string>.get_IsSome(user.Name) ? user.Name.Value : "<no name>";
+                    var text = FSharpOption<string>.get_IsSome(note.Text) ? note.Text.Value : "<image only>"; 
 
                     if (FSharpOption<Note>.get_IsNone(note.Renote))
                     {
                         Console.WriteLine("-- note --");
                         Console.WriteLine($"user: {name}");
-                        Console.WriteLine($"text: {note.Text.Value ?? "<no text>"}");
+                        Console.WriteLine($"text: {text}");
                     }
                     else
                     {
                         var renote = note.Renote.Value;
+                        var original = FSharpOption<string>.get_IsSome(renote.User.Name) ? renote.User.Name.Value : "<no name>";
+                        var renotedText = FSharpOption<string>.get_IsSome(renote.Text) ? renote.Text.Value : "<image only>";
 
                         Console.WriteLine("-- renote --");
-                        Console.WriteLine($"user: {name}");
-                        Console.WriteLine($"renoted by: {renote.User?.Name.Value ?? "<no name>"}");
-                        Console.WriteLine($"text: {renote.Text.Value ?? "<no text>"}");
+                        Console.WriteLine($"user: {original}");
+                        Console.WriteLine($"renoted by: {name}");
+                        Console.WriteLine($"text: {renotedText}");
                     }
                     break;
                 case ChannelMessageBody.Notification notificationMessage:
@@ -121,10 +125,12 @@ while (true)
                     {
                         case NotificationModule.Body.OfReaction reactionBody:
                             var reaction = reactionBody.Item;
+                            var reactingUser = FSharpOption<string>.get_IsSome(reaction.User.Name) ? reaction.User.Name.Value : "<no name>";
+                            var reactedText = FSharpOption<string>.get_IsSome(reaction.Note.Text) ? reaction.Note.Text.Value : "<image only>";
                             Console.WriteLine("-- reaction --");
-                            Console.WriteLine($"user: {reaction.User?.Name.Value ?? "<no name>"}");
+                            Console.WriteLine($"user: {reactingUser}");
                             Console.WriteLine($"reaction: {reaction.Reaction}");
-                            Console.WriteLine($"note: {reaction.Note?.Text.Value ?? "<no text>"}");
+                            Console.WriteLine($"text: {reactedText}");
                             break;
                         default:
                             Console.WriteLine("-- other notification --");
