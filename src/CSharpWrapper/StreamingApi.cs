@@ -1,4 +1,4 @@
-using Misskey.Net.StreamingApi;
+using Misskey.Net;
 using Microsoft.FSharp.Core;
 using System.Text.Json.Nodes;
 using System.Net.WebSockets;
@@ -13,7 +13,7 @@ namespace Misskey.Net.StreamingApi
             return streamingApi.ConnectStreamingAsync(cancellationTokenOpt);
         }
 
-        public static Task<JsonNode> ReceiveAsync(this StreamingApi streamingApi, CancellationToken? cancellationToken = null)
+        public static Task<ApiTypes.StreamMessage> ReceiveAsync(this StreamingApi streamingApi, CancellationToken? cancellationToken = null)
         {
             FSharpOption<CancellationToken> cancellationTokenOpt = cancellationToken == null ? FSharpOption<CancellationToken>.None : FSharpOption<CancellationToken>.Some(cancellationToken.Value);
             return streamingApi.ReceiveAsync(cancellationTokenOpt);

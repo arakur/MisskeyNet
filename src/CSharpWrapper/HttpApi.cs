@@ -1,17 +1,15 @@
-﻿using Misskey.Net.HttpApi;
-using Microsoft.FSharp.Core;
-using System.Text.Json.Nodes;
+﻿using Microsoft.FSharp.Core;
 
 namespace Misskey.Net.HttpApi
 {
     public static class HttpApiExtensions
     {
-        public static Task AuthorizeAsync(this HttpApi httpApi, string? name = null, string? icon = null, string? callback = null, IEnumerable<Permission>? permissions = null)
+        public static Task AuthorizeAsync(this HttpApi httpApi, string? name = null, string? icon = null, string? callback = null, IEnumerable<Permission.Permission>? permissions = null)
         {
             FSharpOption<string> nameOpt = name == null ? FSharpOption<string>.None : FSharpOption<string>.Some(name);
             FSharpOption<string> iconOpt = icon == null ? FSharpOption<string>.None : FSharpOption<string>.Some(icon);
             FSharpOption<string> callbackOpt = callback == null ? FSharpOption<string>.None : FSharpOption<string>.Some(callback);
-            FSharpOption<IEnumerable<Permission>> permissionsOpt = permissions == null ? FSharpOption<IEnumerable<Permission>>.None : FSharpOption<IEnumerable<Permission>>.Some(permissions);
+            FSharpOption<IEnumerable<Permission.Permission>> permissionsOpt = permissions == null ? FSharpOption<IEnumerable<Permission.Permission>>.None : FSharpOption<IEnumerable<Permission.Permission>>.Some(permissions);
             return httpApi.AuthorizeAsync(nameOpt, iconOpt, callbackOpt, permissionsOpt);
         }
 
@@ -23,7 +21,7 @@ namespace Misskey.Net.HttpApi
             return httpApi.WaitCheckAsync(spanOpt, timeoutOpt, silentOpt);
         }
 
-        public static Task<JsonNode> RequestApiAsync(this HttpApi httpApi, IEnumerable<string> endPointNameSeq, IEnumerable<(string, string)>? payload = null)
+        public static Task<ApiTypes.Data> RequestApiAsync(this HttpApi httpApi, IEnumerable<string> endPointNameSeq, IEnumerable<(string, string)>? payload = null)
         {
             FSharpOption<IEnumerable<Tuple<string, string>>> payloadOpt =
                 payload == null
