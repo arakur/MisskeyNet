@@ -1,4 +1,4 @@
-﻿module Misskey.Net.HttpApi
+﻿namespace Misskey.Net.HttpApi
 
 open FSharpPlus
 open System
@@ -10,13 +10,15 @@ open Misskey.Net.Uri
 open Misskey.Net.Uri.UriMk
 open Misskey.Net.Utils.Measure
 open Misskey.Net.Permission
-open Misskey.Net.Data
+open Misskey.Net.ApiTypes
 
 //
 
-[<Literal>]
-let MIAUTH = "miauth"
+module Miauth =
+    [<Literal>]
+    let MIAUTH = "miauth"
 
+open Miauth
 
 /// <summary>
 /// A type synonym for access tokens. \

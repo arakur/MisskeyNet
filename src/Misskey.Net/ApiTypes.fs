@@ -1,6 +1,6 @@
 // TODO: Generate this file from the source code of misskey-js, seriously.
 
-module Misskey.Net.Data
+module Misskey.Net.ApiTypes
 
 open System.Text.Json.Nodes
 
@@ -272,7 +272,7 @@ type Instance(json: JsonNode) =
 
 //
 
-[<RequireQualifiedAccess>]
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module User =
     type Instance(json: JsonNode) =
         inherit Data(json)
@@ -338,7 +338,7 @@ module User =
 
 //
 
-[<RequireQualifiedAccess>]
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Note =
     type Choice =
         { isVoted: bool
@@ -545,6 +545,7 @@ type UserGroup(json) =
 
     member this.Id: ID = this.GetString "id"
 
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Notification =
 
     type Reaction(json: JsonNode) =
@@ -710,6 +711,7 @@ module Notification =
         | OfApp of App
         | Other of body: Data
 
+
 type Notification(json: JsonNode) =
     inherit Data(json)
 
@@ -772,15 +774,15 @@ type MessagingMessage(json: JsonNode) =
 
 [<RequireQualifiedAccess>]
 type ChannelMessageBody =
-    | Note of Note
-    | Notification of Notification
-    | Mention of Note
-    | Reply of Note
-    | Renote of Note
-    | Follow of User
-    | Followed of User
-    | Unfollow of User
-    | MessagingMessage of MessagingMessage
+    | Note of body: Note
+    | Notification of body: Notification
+    | Mention of body: Note
+    | Reply of body: Note
+    | Renote of body: Note
+    | Follow of body: User
+    | Followed of body: User
+    | Unfollow of body: User
+    | MessagingMessage of body: MessagingMessage
     | ReadAllNotifications
     | UnreadNotification
     | UnreadMention
@@ -789,7 +791,7 @@ type ChannelMessageBody =
     | ReadAllUnreadSpecifiedNotes
     | UnreadMessagingMessage
     | ReadAllMessagingMessages
-    | Other of body: Data
+    | Other of self: Data
 
 //
 
@@ -890,10 +892,10 @@ type OtherMessage(json: JsonNode) =
 
 [<RequireQualifiedAccess>]
 type StreamMessage =
-    | Channel of ChannelMessage
-    | NoteUpdated of NoteUpdatedMessage
-    | Connected of ConnectedMessage
-    | Other of OtherMessage
+    | Channel of body: ChannelMessage
+    | NoteUpdated of body: NoteUpdatedMessage
+    | Connected of body: ConnectedMessage
+    | Other of body: OtherMessage
 
     static member get (key: string) (json: JsonNode) =
         json |> getNode key |> StreamMessage.ofJson
@@ -956,7 +958,7 @@ type Ad(json: JsonNode) =
     static member get (key: string) (json: JsonNode) = json |> getNode key |> Ad
     static member tryGet (key: string) (json: JsonNode) = json |> tryGetNode key |> Option.map Ad
 
-[<RequireQualifiedAccess>]
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module APIError =
     type Kind =
         | Client
@@ -1002,6 +1004,7 @@ type Announcement(json: JsonNode) =
     member this.ImageUrl: string option = this.TryGetString "imageUrl"
     member this.IsRead: bool = this.GetBool "isRead"
 
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Antenna =
     type Src =
         | Home
@@ -1490,6 +1493,7 @@ type MeDetailed(json: JsonNode) =
     member this.UsePasswordLessLogin: bool = this.GetBool "usePasswordLessLogin"
 // And more untyped fields.
 
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module MeDetailedWithSecret =
     type SecurityKey(json: JsonNode) =
         inherit Data(json)
@@ -1593,7 +1597,7 @@ type PageEvent(json: JsonNode) =
     member this.UserId: ID = this.GetString "userId"
     member this.User: User = this.Json |> User.get "user"
 
-[<RequireQualifiedAccess>]
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module ServerInfo =
     type Cpu(json: JsonNode) =
         inherit Data(json)

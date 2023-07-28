@@ -1,7 +1,7 @@
 ﻿open Misskey.Net.Uri
 open Misskey.Net.HttpApi
 open Misskey.Net.StreamingApi
-open Misskey.Net.Data
+open Misskey.Net.ApiTypes
 open Misskey.Net.Permission
 
 open System.Net.Http
@@ -78,10 +78,10 @@ task {
 
     printfn "connected"
 
-    // Connect to global timeline.
+    // Connect to local timeline.
     let! _channelConnection = streamingApi.ConnectChannelAsync(Channel.LocalTimeline())
 
-    printfn "connected to the global timeline channel"
+    printfn "connected to the local timeline channel"
 
     // Connect to main channel.
     let! _channelConnection = streamingApi.ConnectChannelAsync(Channel.Main())
@@ -96,9 +96,9 @@ task {
         match result with
         // A note or a renote is posted.
         | StreamMessage.Channel message ->
-            let note = message.Body
+            let body = message.Body
 
-            match note with
+            match body with
             | ChannelMessageBody.Note note ->
                 let user = note.User
 
@@ -124,7 +124,7 @@ task {
                 | _ ->
                     printfn "-- other notification --"
                     printfn "%s" <| notification.Body.ToString()
-            | _ -> printfn "other message %s" <| note.ToString()
+            | _ -> printfn "other message %s" <| body.ToString()
 
         // Connected.
         | StreamMessage.Connected message ->

@@ -6,7 +6,7 @@
   <ItemGroup>
     <Compile Include="Measure.fs" />
     <Compile Include="Uri.fs" />
-    <Compile Include="Data.fs" />
+    <Compile Include="ApiTypes.fs" />
     <Compile Include="Response.fs" />
     <Compile Include="HttpRequest.fs" />
     <Compile Include="Permission.Interfaces.fs" />

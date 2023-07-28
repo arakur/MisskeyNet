@@ -5,14 +5,13 @@
 
 open Misskey.Net.Uri
 open Misskey.Net.HttpApi
-open Misskey.Net.Data
+open Misskey.Net.ApiTypes
 
 open System.Net.WebSockets
 open System.Threading
 open System
 open System.Text
 open System.Text.Json.Nodes
-open Misskey.Net.Data
 
 //
 
