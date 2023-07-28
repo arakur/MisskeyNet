@@ -7,7 +7,6 @@ open Misskey.Net.Permission
 open System.Net.Http
 open Microsoft.Extensions.DependencyInjection
 open System.Net.WebSockets
-open FSharpPlus
 open System.Threading.Tasks
 
 //
@@ -135,7 +134,12 @@ task {
         | StreamMessage.NoteUpdated message ->
             printfn "-- note updated --"
             printfn "id: %s" message.Id
-            let body = message.BodyData.ToString() |> String.take 30 |> (fun s -> s + "...")
+
+            let body =
+                message.BodyData.ToString()
+                |> (fun s -> s.Substring(0, 30))
+                |> (fun s -> s + "...")
+
             printfn "body: %s" body
 
         // Other messages.
