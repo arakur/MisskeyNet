@@ -1,4 +1,5 @@
 // Generate Permission.fs.
+// TODO: Use Fantomas.Core (https://fsprojects.github.io/fantomas/docs/end-users/GeneratingCode.html#Generating-source-code-from-scratch).
 
 let url =
     "https://raw.githubusercontent.com/misskey-dev/misskey-hub/main/src/docs/api/permission.md"
@@ -101,7 +102,7 @@ let permissionHeader = permissionTable.[0]
 let _permissionSeparator = permissionTable.[1]
 let permissionRows = permissionTable.[2..]
 
-// REMARK: `Permisson` is typo in the document. It will be removed after the document is fixed.
+// REMARK: `Permisson` is typo in the document. It will be removed after it is fixed.
 let permissionColumn =
     permissionHeader
     |> Array.findIndex (fun column -> column.Contains("Permission") || column.Contains("Permisson"))

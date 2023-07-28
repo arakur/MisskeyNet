@@ -20,39 +20,9 @@ let Host = "misskey.systems"
 
 //
 
-// Utilities:
-
+// Utility.
 let await (task: Task<'T>) =
     task |> Async.AwaitTask |> Async.RunSynchronously
-
-// Print a note.
-let printNote (name, text) =
-    printfn "-- text --"
-    printfn "user: %s" name
-    printfn "text: %s" text
-
-// Print a renote.
-let printRenote (name, renotedName, text) =
-    printfn "-- renote --"
-    printfn "user: %s" renotedName
-    printfn "renoted by: %s" name
-    printfn "text: %s" text
-
-// Print a note updated.
-let printNoteUpdated (id, body) =
-    printfn "-- note updated --"
-    printfn "id: %s" id
-    printfn "body: %s" body
-
-// Print a connected message.
-let printConnected id =
-    printfn "-- connected --"
-    printfn "id: %s" id
-
-// Print an unknown message.
-let printUnknown message =
-    printfn "-- unknown --"
-    printfn "%s" <| (message.ToString() |> String.take 30) + "..."
 
 //
 
@@ -75,7 +45,7 @@ printfn "stats: %s" <| stats.ToString()
 
 let auth =
     task {
-        // Authorize this app to Misskey instance with permission `read:account` (but not required).
+        // Authorize this app to Misskey instance with permission `read:notification`.
         do!
             httpApi.AuthorizeAsync(
                 name = appName,
@@ -103,43 +73,67 @@ task {
     printfn "connected"
 
     // Connect to global timeline.
-    let! _channelConnection = streamingApi.ConnectChannelAsync(Channel.GlobalTimeline())
+    let! _channelConnection = streamingApi.ConnectChannelAsync(Channel.LocalTimeline())
 
-    printfn "channel connected"
+    printfn "connected to the global timeline channel"
+
+    // Connect to main channel.
+    let! _channelConnection = streamingApi.ConnectChannelAsync(Channel.Main())
+
+    printfn "connected to the main channel"
 
     while true do
-        try
-            printfn "subscribing..."
-            // Subscribe to global timeline.
-            let! result = streamingApi.ReceiveAsync()
+        printfn "subscribing..."
+        // Subscribe to global timeline.
+        let! result = streamingApi.ReceiveAsync()
 
-            match result with
-            // A note or a renote is posted.
-            | StreamMessage.Channel message ->
-                let note = message.Body
+        match result with
+        // A note or a renote is posted.
+        | StreamMessage.Channel message ->
+            let note = message.Body
 
+            match note with
+            | ChannelMessageBody.Note note ->
                 let user = note.User
 
                 let name = defaultArg user.Name "<no name>"
 
                 match note.Renote with
-                | None -> printNote (name, defaultArg note.Text "<no text>")
+                | None ->
+                    printfn "-- note --"
+                    printfn "user: %s" name
+                    printfn "text: %s" <| defaultArg note.Text "<no text>"
                 | Some renote ->
-                    printRenote (name, defaultArg renote.User.Name "<no name>", defaultArg renote.Text "<no text>")
+                    printfn "-- renote --"
+                    printfn "user: %s" name
+                    printfn "renoted by: %s" <| defaultArg renote.User.Name "<no name>"
+                    printfn "text: %s" <| defaultArg renote.Text "<no text>"
+            | ChannelMessageBody.Notification notification ->
+                match notification.Body with
+                | Notification.Body.OfReaction reaction ->
+                    printfn "-- reaction --"
+                    printfn "user: %s" <| defaultArg reaction.User.Name "<no name>"
+                    printfn "reaction: %s" <| reaction.Reaction
+                    printfn "note: %s" <| defaultArg reaction.Note.Text "<no text>"
+                | _ ->
+                    printfn "-- other notification --"
+                    printfn "%s" <| notification.Body.ToString()
+            | _ -> printfn "other message %s" <| note.ToString()
 
-            // Connected.
-            | StreamMessage.Connected message -> printConnected message.Id
+        // Connected.
+        | StreamMessage.Connected message ->
+            printfn "-- connected --"
+            printfn "id: %s" message.Id
 
-            // Note updated.
-            | StreamMessage.NoteUpdated message ->
-                printNoteUpdated (message.Id, (message.BodyData.ToString() |> String.take 30) + "...")
+        // Note updated.
+        | StreamMessage.NoteUpdated message ->
+            printfn "-- note updated --"
+            printfn "id: %s" message.Id
+            let body = message.BodyData.ToString() |> String.take 30 |> (fun s -> s + "...")
+            printfn "body: %s" body
 
-            // Other messages.
-            | StreamMessage.Other message -> printUnknown message
-
-        with ex ->
-            // Handle exceptions.
-            printfn "ERROR OCCURS: %s" <| ex.Message
+        // Other messages.
+        | StreamMessage.Other message -> printfn "-- other message --"
 
         return ()
 }

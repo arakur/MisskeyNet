@@ -1,3 +1,5 @@
+// TODO: Generate this file from the source code of misskey, seriously.
+
 module Misskey.Net.Data
 
 open System.Text.Json.Nodes
@@ -85,25 +87,73 @@ module internal Utils =
 //
 
 open Utils
-open FSharpPlus.Internals
 
 let private checkNull (json: JsonNode) =
     if json = null then
         failwith "given json node is null"
 
+/// <summary>
+/// A class that wraps a JSON node. \
+/// JSON ノードをラップするクラス．
+/// </summary>
+/// <param name="json">The JSON node. JSON ノード．</param>
+/// <exception cref="System.Exception">
+/// Thrown when the given JSON node is null. \
+/// 与えられた JSON ノードが null のときにスローされます．
+/// </exception>
 type Data(json: JsonNode) =
     do checkNull json
 
+    /// <summary>
+    /// Get an item of the JSON node. \
+    /// JSON ノードの項目を取得します．
+    /// </summary>
+    /// <param name="key">The key of the item. 項目のキー．</param>
+    /// <returns>The item of the JSON node. JSON ノードの項目．</returns>
+    /// <remarks>
+    /// This method is equivalent to `json[key]`. If the key is not found or the value is null, this method returns `null`. \
+    /// このメソッドは `json[key]` と等価です．キーが見つからないか値が null のとき，このメソッドは `null` を返します．
+    /// </remarks>
     member __.Item
         with get (key: string) = getNode key json
 
+    override __.ToString() = json.ToString()
+
+    /// <summary>
+    /// The JSON node. \
+    /// JSON ノード．
+    /// </summary>
     member __.Json: JsonNode = json
 
+    member __.Get<'T>(key: string) =
+        getWith (fun json -> json.GetValue<'T>()) key json
+
+    member __.TryGet<'T>(key: string) =
+        tryGetWith (fun json -> json.GetValue<'T>()) key json
+
+    /// <summary>
+    /// Get an item of the JSON node. \
+    /// JSON ノードの項目を取得します．
+    /// </summary>
+    /// <param name="key">The key of the item. 項目のキー．</param>
+    /// <returns>The item of the JSON node. JSON ノードの項目．</returns>
+    /// <exception cref="System.Exception">
+    /// Thrown when the key is not found. キーが見つからなかったときにスローされます．
+    /// </exception>
     member __.GetNode(key: string) = getNode key json
+
+    /// <summary>
+    /// If the key is found, get an item of the JSON node, otherwise return `None`. \
+    /// キーが見つかった場合，JSON ノードの項目を取得します．そうでない場合，`None` を返します．
+    /// </summary>
+    /// <param name="key">The key of the item. 項目のキー．</param>
+    /// <returns>The item of the JSON node or `None`. JSON ノードの項目または `None`．</returns>
     member __.TryGetNode(key: string) = tryGetNode key json
 
+    // TODO: Write documentation for the rest of the members.
     member __.GetValue(key: string) = getValue key json
     member __.TryGetValue(key: string) = tryGetValue key json
+
 
     member __.GetArray(key: string) = getArray key json
     member __.TryGetArray(key: string) = tryGetArray key json
@@ -293,6 +343,8 @@ module Note =
 type Note(json: JsonNode) =
     inherit Data(json)
 
+    new(data: Data) = Note(data.Json)
+
     static member get (key: string) (json: JsonNode) = json |> getNode key |> Note
 
     static member tryGet (key: string) (json: JsonNode) =
@@ -392,6 +444,14 @@ and User =
     | Lite of UserLite
     | Detailed of UserDetailed
 
+    static member fromJson(json: JsonNode) =
+        try
+            json |> UserDetailed |> Detailed
+        with _ ->
+            json |> UserLite |> Lite
+
+    static member from(data: Data) = User.fromJson data.Json
+
     static member get (key: string) (json: JsonNode) =
         try
             json |> UserDetailed.get key |> Detailed
@@ -403,6 +463,22 @@ and User =
             Some(User.get key json)
         with _ ->
             None
+
+    member this.AsUserLite: UserLite =
+        match this with
+        | Lite user -> user
+        | Detailed user -> user
+
+    member this.Id: User.ID = this.AsUserLite.Id
+    member this.Username: string = this.AsUserLite.Username
+    member this.Host: string option = this.AsUserLite.Host
+    member this.Name: string option = this.AsUserLite.Name
+    member this.OnlineStatus: User.OnlineStatus = this.AsUserLite.OnlineStatus
+    member this.AvatarUrl: string = this.AsUserLite.AvatarUrl
+    member this.AvatarBlurhash: string = this.AsUserLite.AvatarBlurhash
+    member this.Emojis: User.Emoji list = this.AsUserLite.Emojis
+    member this.Instance: User.Instance = this.AsUserLite.Instance
+
 
 and Page(json: JsonNode) =
     inherit Data(json)
@@ -439,6 +515,185 @@ and Page(json: JsonNode) =
 
 //
 
+module UserGroup =
+    type ID = string
+
+// REMARK: Untyped in the API document.
+type UserGroup(json) =
+    inherit Data(json)
+
+    static member get (key: string) (json: JsonNode) = json |> getNode key |> UserGroup
+
+    static member tryGet (key: string) (json: JsonNode) =
+        json |> tryGetNode key |> Option.map UserGroup
+
+    member this.Id: UserGroup.ID = this.GetString "id"
+
+module Notification =
+
+    type Reaction(json: JsonNode) =
+        inherit Data(json)
+
+        member this.Reaction: string = this.GetString "reaction"
+        member this.User: User = this.Json |> User.get "user"
+        member this.UserId: User.ID = this.GetString "userId"
+        member this.Note: Note = this.Json |> Note.get "note"
+
+    type Reply(json: JsonNode) =
+        inherit Data(json)
+
+        member this.User: User = this.Json |> User.get "user"
+        member this.UserId: User.ID = this.GetString "userId"
+        member this.Note: Note = this.Json |> Note.get "note"
+
+    type Renote(json: JsonNode) =
+        inherit Data(json)
+
+        member this.User: User = this.Json |> User.get "user"
+        member this.UserId: User.ID = this.GetString "userId"
+        member this.Note: Note = this.Json |> Note.get "note"
+
+    type Quote(json: JsonNode) =
+        inherit Data(json)
+
+        member this.User: User = this.Json |> User.get "user"
+        member this.UserId: User.ID = this.GetString "userId"
+        member this.Note: Note = this.Json |> Note.get "note"
+
+    type Mention(json: JsonNode) =
+        inherit Data(json)
+
+        member this.User: User = this.Json |> User.get "user"
+        member this.UserId: User.ID = this.GetString "userId"
+        member this.Note: Note = this.Json |> Note.get "note"
+
+    type PollVote(json: JsonNode) =
+        inherit Data(json)
+
+        member this.User: User = this.Json |> User.get "user"
+        member this.UserId: User.ID = this.GetString "userId"
+        member this.Note: Note = this.Json |> Note.get "note"
+
+    type Follow(json: JsonNode) =
+        inherit Data(json)
+
+        member this.User: User = this.Json |> User.get "user"
+        member this.UserId: User.ID = this.GetString "userId"
+
+    type FollowRequestAccepted(json: JsonNode) =
+        inherit Data(json)
+
+        member this.User: User = this.Json |> User.get "user"
+        member this.UserId: User.ID = this.GetString "userId"
+
+    type ReceiveFollowRequest(json: JsonNode) =
+        inherit Data(json)
+
+        member this.User: User = this.Json |> User.get "user"
+        member this.UserId: User.ID = this.GetString "userId"
+
+    type GroupInvited(json: JsonNode) =
+        inherit Data(json)
+
+        member this.Invitation: UserGroup = this.Json |> UserGroup.get "invitation"
+        member this.User: User = this.Json |> User.get "user"
+        member this.UserId: User.ID = this.GetString "userId"
+
+    type App(json: JsonNode) =
+        inherit Data(json)
+
+        member this.Header: string option = this.TryGetString "header"
+        member this.Body: string = this.GetString "body"
+        member this.Icon: string option = this.TryGetString "icon"
+
+    [<RequireQualifiedAccess>]
+    type Body =
+        | OfReaction of Reaction
+        | OfReply of Reply
+        | OfRenote of Renote
+        | OfQuote of Quote
+        | OfMention of Mention
+        | OfPollVote of PollVote
+        | OfFollow of Follow
+        | OfFollowRequestAccepted of FollowRequestAccepted
+        | OfReceiveFollowRequest of ReceiveFollowRequest
+        | OfGroupInvited of GroupInvited
+        | OfApp of App
+        | Other of body: Data
+
+type Notification(json: JsonNode) =
+    inherit Data(json)
+
+    new(data: Data) = Notification(data.Json)
+
+    member this.Id: string = this.GetString "id"
+    member this.CreatedAt: DateString = this.GetString "createdAt"
+    member this.IsRead: bool = this.GetBool "isRead"
+    member this.Type: string = this.GetString "type"
+
+    member this.Body =
+        match this.Type with
+        | "reaction" -> Notification.Body.OfReaction(Notification.Reaction(this.Json))
+        | "reply" -> Notification.Body.OfReply(Notification.Reply(this.Json))
+        | "renote" -> Notification.Body.OfRenote(Notification.Renote(this.Json))
+        | "quote" -> Notification.Body.OfQuote(Notification.Quote(this.Json))
+        | "mention" -> Notification.Body.OfMention(Notification.Mention(this.Json))
+        | "pollVote" -> Notification.Body.OfPollVote(Notification.PollVote(this.Json))
+        | "follow" -> Notification.Body.OfFollow(Notification.Follow(this.Json))
+        | "followRequestAccepted" ->
+            Notification.Body.OfFollowRequestAccepted(Notification.FollowRequestAccepted(this.Json))
+        | "receiveFollowRequest" ->
+            Notification.Body.OfReceiveFollowRequest(Notification.ReceiveFollowRequest(this.Json))
+        | "groupInvited" -> Notification.Body.OfGroupInvited(Notification.GroupInvited(this.Json))
+        | "app" -> Notification.Body.OfApp(Notification.App(this.Json))
+        | _ -> Notification.Body.Other(Data(this.Json))
+
+//
+
+type MessagingMessage(json: JsonNode) =
+    inherit Data(json)
+
+    new(data: Data) = MessagingMessage(data.Json)
+
+    member this.Id: string = this.GetString "id"
+    member this.CreatedAt: DateString = this.GetString "createdAt"
+    member this.File: DriveFile option = this.Json |> DriveFile.tryGet "file"
+    member this.FileId: DriveFile.ID option = this.TryGetString "fileId"
+    member this.IsRead: bool = this.GetBool "isRead"
+    member this.Reads: User.ID list = this.GetStringList "reads"
+    member this.Text: string option = this.TryGetString "text"
+    member this.User: User = this.Json |> User.get "user"
+    member this.UserId: User.ID = this.GetString "userId"
+    member this.Recipient: User option = this.Json |> User.tryGet "recipient"
+    member this.RecipientId: User.ID option = this.TryGetString "recipientId"
+    member this.Group: UserGroup option = this.Json |> UserGroup.tryGet "group"
+    member this.GroupId: UserGroup.ID option = this.TryGetString "groupId"
+
+//
+
+[<RequireQualifiedAccess>]
+type ChannelMessageBody =
+    | Note of Note
+    | Notification of Notification
+    | Mention of Note
+    | Reply of Note
+    | Renote of Note
+    | Follow of User
+    | Followed of User
+    | Unfollow of User
+    | MessagingMessage of MessagingMessage
+    | ReadAllNotifications
+    | UnreadNotification
+    | UnreadMention
+    | ReadAllUnreadMentions
+    | UnreadSpecifiedNote
+    | ReadAllUnreadSpecifiedNotes
+    | UnreadMessagingMessage
+    | ReadAllMessagingMessages
+    | Other of body: Data
+
+//
+
 [<RequireQualifiedAccess>]
 type StreamMessageType =
     | Channel
@@ -457,8 +712,29 @@ type ChannelMessage(json: JsonNode) =
 
     member this.Id: string = this.GetString "id"
     member this.Type: string = this.GetString "type"
-    member this.Body: Note = this.Json |> Note.get "body" // TODO: Check if it's only possible to be Note.
+
     member this.BodyData: Data = Data(this.GetNode "body")
+
+    member this.Body: ChannelMessageBody =
+        match this.Type with
+        | "note" -> this.BodyData |> Note |> ChannelMessageBody.Note
+        | "notification" -> this.BodyData |> Notification |> ChannelMessageBody.Notification
+        | "mention" -> this.BodyData |> Note |> ChannelMessageBody.Mention
+        | "reply" -> this.BodyData |> Note |> ChannelMessageBody.Reply
+        | "renote" -> this.BodyData |> Note |> ChannelMessageBody.Renote
+        | "follow" -> this.BodyData |> User.from |> ChannelMessageBody.Follow
+        | "followed" -> this.BodyData |> User.from |> ChannelMessageBody.Followed
+        | "unfollow" -> this.BodyData |> User.from |> ChannelMessageBody.Unfollow
+        | "messagingMessage" -> this.BodyData |> MessagingMessage |> ChannelMessageBody.MessagingMessage
+        | "readAllNotifications" -> ChannelMessageBody.ReadAllNotifications
+        | "unreadNotification" -> ChannelMessageBody.UnreadNotification
+        | "unreadMention" -> ChannelMessageBody.UnreadMention
+        | "readAllUnreadMentions" -> ChannelMessageBody.ReadAllUnreadMentions
+        | "unreadSpecifiedNote" -> ChannelMessageBody.UnreadSpecifiedNote
+        | "readAllUnreadSpecifiedNotes" -> ChannelMessageBody.ReadAllUnreadSpecifiedNotes
+        | "unreadMessagingMessage" -> ChannelMessageBody.UnreadMessagingMessage
+        | "readAllMessagingMessages" -> ChannelMessageBody.ReadAllMessagingMessages
+        | _ -> ChannelMessageBody.Other(Data(json))
 
 type NoteUpdatedMessage(json: JsonNode) =
     inherit Data(json)

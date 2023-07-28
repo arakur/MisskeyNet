@@ -10,11 +10,12 @@ open Misskey.Net.Uri
 open Misskey.Net.Uri.UriMk
 open Misskey.Net.Utils.Measure
 open Misskey.Net.Permission
+open Misskey.Net.Data
 
 //
 
 [<Literal>]
-let MiAuth = "miauth"
+let MIAUTH = "miauth"
 
 
 /// <summary>
@@ -33,23 +34,33 @@ type Token = string
 /// セッションIDは <see cref="System.Guid.NewGuid"/> によって生成された UUID です．
 /// </remarks>
 type Session() =
-    member val internal Uuid = Guid.NewGuid().ToString() with get
+    /// <summary>
+    /// The session ID. \
+    /// セッションID．
+    /// </summary>
+    member val Uuid = Guid.NewGuid().ToString() with get
+
+    /// <summary>
+    /// Check if the session ID is equal to the given UUID. \
+    /// セッションIDが与えられた UUID と等しいか確認します．
+    /// </summary>
+    member this.CheckEquals(uuid: string) = uuid = this.Uuid
 
 
 /// <summary>
 /// A class that provides a HTTP API. \
 /// HTTP API を提供するクラス．
 /// </summary>
-/// <param name="scheme">The scheme of the API. API のスキーム．</param>
 /// <param name="host">The host of the API. API のホスト．</param>
 /// <param name="client">The HTTP client. HTTP クライアント．</param>
+/// <param name="scheme">The scheme of the API. API のスキーム．</param>
 type HttpApi(host: string, client: IHttpClientFactory, scheme: Scheme) =
     let mutable token = None
     let mutable authorizedUserId = None
 
     //
 
-    new(host, client) = HttpApi(host, client, Http)
+    new(host, client) = HttpApi(host, client, Https)
 
     //
 
@@ -112,7 +123,7 @@ type HttpApi(host: string, client: IHttpClientFactory, scheme: Scheme) =
     /// `https://host.name/miauth/sessionID`
     /// </summary>
     member this.MiAuthUri =
-        this.Uri |> withDirectory "miauth" |> withDirectory this.Session.Uuid
+        this.Uri |> withDirectory MIAUTH |> withDirectory this.Session.Uuid
 
     // TODO: Add an option to specify permissions.
 
@@ -126,19 +137,17 @@ type HttpApi(host: string, client: IHttpClientFactory, scheme: Scheme) =
 
         let os = Environment.OSVersion.Platform
 
-        let nameQuery = name |> Option.map (fun x -> "name", x)
+        let nameQuery = name |>> (fun x -> "name", x)
 
-        let iconQuery = icon |> Option.map (fun x -> "icon", x)
+        let iconQuery = icon |>> (fun x -> "icon", x)
 
-        let callbackQuery = callback |> Option.map (fun x -> "callback", x)
+        let callbackQuery = callback |>> (fun x -> "callback", x)
 
         let permissionsQuery =
             permissions
-            |> map (
-                map (fun (permission: Permission) -> permission.Name)
-                >> String.concat ","
-                >> fun x -> "permission", x
-            )
+            |>> (Seq.map (fun (permission: Permission) -> permission.Name)
+                 >> String.concat ","
+                 >> fun x -> "permission", x)
 
         let queries =
             [| nameQuery; iconQuery; callbackQuery; permissionsQuery |] |> Seq.choose id
@@ -270,8 +279,7 @@ type HttpApi(host: string, client: IHttpClientFactory, scheme: Scheme) =
 
         // Make payload into JSON.
         let json =
-            payload
-            |> Seq.map (fun (k, v) -> $"\"{k}\":\"{v}\"")
+            payload |>> (fun (k, v) -> $"\"{k}\":\"{v}\"")
             |> String.concat ","
             |> fun x -> $"{{{x}}}"
 
@@ -280,7 +288,9 @@ type HttpApi(host: string, client: IHttpClientFactory, scheme: Scheme) =
         task {
             use stringContent = new StringContent(json, Encoding.UTF8, "application/json")
 
-            return! HttpRequest.Post().Request(this.Client, uri, stringContent)
+            let! response = HttpRequest.Post().Request(this.Client, uri, stringContent)
+
+            return response |> Data
         }
 
 // TODO: Generate functions for each endpoint.
