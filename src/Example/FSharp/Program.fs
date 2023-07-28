@@ -39,9 +39,15 @@ let client =
 let httpApi = HttpApi(scheme = Https, host = Host, client = client)
 
 // Get stats of Misskey instance.
-let stats = httpApi.RequestApiAsync [ "stats" ] |> await
+let stats = httpApi.RequestApiAsync [ "stats" ] |> await |> Stats
 
-printfn "stats: %s" <| stats.ToString()
+printfn "--stats --"
+
+printfn "stats: %i" <| stats.NotesCount
+
+printfn "users: %i" <| stats.UsersCount
+
+printfn "instances: %i" <| stats.Instances
 
 let auth =
     task {
