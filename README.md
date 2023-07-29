@@ -1,4 +1,4 @@
-# High-Level Wrapper in .NET for Misskey API (WIP)
+# High-Level Wrapper in .NET for Misskey API
 
 Misskey API の高レベルな .NET ラッパーです．
 
